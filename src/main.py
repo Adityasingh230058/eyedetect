@@ -94,11 +94,6 @@ def main():
         help="Run comprehensive Cybersecurity Attack Taxonomy Audit Scorecard across all domains",
     )
     parser.add_argument(
-        "--web",
-        action="store_true",
-        help="Launch the interactive Wazuh-style Threat Hunting Web Dashboard on http://localhost:8080",
-    )
-    parser.add_argument(
         "--export-navigator",
         type=str,
         default=None,
@@ -112,12 +107,6 @@ def main():
     )
 
     args = parser.parse_args()
-
-    # Launch Web Dashboard if requested
-    if args.web:
-        from ui.server import run_server
-        run_server()
-        return
 
     # 1. Load Rules
     rules_path = Path(args.rules)
