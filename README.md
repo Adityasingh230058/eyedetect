@@ -1,68 +1,95 @@
 # 👁️ eyedetect — Enterprise Cyber Threat Detection & Automated Response Engine
 
-A high-performance, cross-domain Endpoint, Identity, Network, and Cloud Threat Detection & Automated Remediation Engine (EDR / XDR) built in Python.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Python: 3.9+](https://img.shields.io/badge/Python-3.9%2B-brightgreen.svg)](https://www.python.org/)
+[![Tests: 40 Passed](https://img.shields.io/badge/Tests-40%20Passed%20(100%25)-success.svg)](tests/)
+[![MITRE ATT&CK](https://img.shields.io/badge/MITRE%20ATT%26CK-12%2F12%20Tactics%20Covered-orange.svg)](rules/)
+[![Project Status](https://img.shields.io/badge/Status-Active%20Capstone%20Development-yellow.svg)](#-project-status--research-disclaimer)
+
+A cross-domain Endpoint, Identity, Network, and Cloud Threat Detection & Automated Remediation Engine (EDR / XDR) designed in Python.
 
 ---
 
-## 🚀 How to Test This Project (Step-by-Step)
+## ⚠️ Project Status & Research Disclaimer
 
-Anyone visiting this repository can clone, run, and verify the entire detection system in under 2 minutes.
+> **📌 PLEASE NOTE: ACTIVE CAPSTONE RESEARCH & DEVELOPMENT PROTOTYPE**
+> 
+> * This project is an **academic capstone engineering prototype** currently undergoing active, continuous development and evaluation.
+> * While the core detection engine, unit test suite (40/40 tests), and rulebase are validated, **it is not a finalized commercial build**.
+> * Ongoing research updates, experimental detection modules, and performance refactors are pushed frequently. Minor environment-specific quirks or edge-case variations may occur during testing across different operating systems.
+> * Feedback, bug reports, and research discussions are welcomed via GitHub Issues.
+
+---
+
+## 🧪 How to Test & Verify (Step-by-Step Guide)
+
+Follow these steps to set up, test, and evaluate `eyedetect` on any Windows, macOS, or Linux environment:
+
+### 📋 Prerequisites
+* Python 3.9, 3.10, 3.11, or newer installed.
+* Git installed.
+
+---
 
 ### Step 1: Clone the Repository
-Open PowerShell or your terminal and run:
+Open PowerShell or your system terminal and clone the repository:
 ```bash
 git clone https://github.com/Adityasingh230058/eyedetect.git
 cd eyedetect
 ```
 
+---
+
 ### Step 2: Install Dependencies
+Install the required lightweight packages:
 ```bash
 pip install -r requirements.txt
 ```
-*(Requires Python 3.9 or newer. Uses `pydantic`, `pyyaml`, and `pytest`)*
+*(Dependencies: `pydantic`, `pyyaml`, `pytest`)*
+
+> 💡 **Windows Tip**: If `python` opens the Microsoft Store or shows an alias error, run using your direct Python path (e.g., `py -m pip install -r requirements.txt` or `& "C:\Users\<user>\anaconda3\python.exe"`).
 
 ---
 
-### Step 3: Run the Automated Unit Test Suite
-Verify that all detection math, algorithms, deobfuscators, and threat engines pass with 100% integrity:
+### Step 3: Run the Automated Engine Test Suite
+Run the automated test suite to verify math algorithms, deobfuscators, process trees, and detection logic:
 ```bash
 pytest -v tests/
 ```
-> **Expected Result**: `40 passed in ~4s` (100% pass rate across all 8 test modules).
+* **Expected Result**: `40 passed in ~4s` (100% pass rate across all 8 test modules).
 
 ---
 
-### Step 4: Run the Full Attack Simulation (Live Detection & Auto-Fix)
-Simulate a realistic enterprise attack stream (phishing droppers, password dumps, ransomware canary breach, cloud backdoors, web shells, and wipers):
+### Step 4: Run the Master Cyber Attack Simulation
+Run the full-spectrum enterprise threat simulation to observe detection cards and automated auto-remediation playbooks in real time:
 ```bash
 python src/main.py --rules rules --telemetry samples/master_full_spectrum_simulation.ndjson
 ```
-> **What You Will See**: Clean, human-readable detection cards showing:
-> - 🔴 **What Happened**: Plain-English explanation of the attack.
-> - 🛡️ **Auto-Defense Applied**: Process termination, encrypted vault quarantine, or account lockout.
-> - 📊 **Severity & Confidence**: Threat classification score.
+* **What You Will See**:
+  * 🔴 **Threat Detection Cards**: Clearly explains what the attacker attempted in human-readable terms.
+  * 🛡️ **Automated Defense**: Real-time process termination, file quarantine to encrypted vaults, account lockouts, and cloud access key revocations.
+  * 📊 **Executive Summary**: Final tally of intercepted attacks and containment actions.
 
 ---
 
-### Step 5: View MITRE ATT&CK Matrix & Taxonomy Scorecard
-Verify 100% framework coverage across all 12 MITRE enterprise tactics and 14 attack domains:
+### Step 5: Audit MITRE ATT&CK & Taxonomy Compliance
+Generate full terminal heatmaps and audit scorecards verifying coverage across all 12 MITRE Enterprise tactics and 14 cybersecurity threat domains:
 ```bash
-# View MITRE ATT&CK Matrix & 14-Domain Taxonomy Scorecard
 python src/main.py --mitre-matrix --audit-taxonomy
 ```
 
 ---
 
-## 🎯 Additional Test Scenarios
+## 🎯 Additional Dedicated Test Scenarios
 
-### 👤 Identity & Active Directory UEBA Test
-Simulate brute-force attacks, password spraying, and Kerberoasting:
+### 👤 Identity & Active Directory UEBA Simulation
+Simulate and detect account brute-force attacks, distributed password spraying, and Kerberoasting:
 ```bash
 python src/main.py --rules rules --telemetry samples/identity_threat_simulation.ndjson
 ```
 
-### 🌐 Enterprise Multi-Hop Lateral Movement Test
-Simulate an attacker pivoting across multiple endpoints into a Domain Controller and Cloud:
+### 🌐 Enterprise Multi-Hop Cross-Domain Lateral Movement
+Simulate and track an attacker moving laterally from a phished laptop across servers to a Domain Controller and Cloud:
 ```bash
 python src/main.py --rules rules --telemetry samples/enterprise_cloud_attack_simulation.ndjson
 ```
@@ -98,7 +125,7 @@ eyedetect/
 │   ├── enterprise_cloud_attack_simulation.ndjson
 │   └── identity_threat_simulation.ndjson
 ├── src/                      # Core detection and remediation engine
-│   ├── alerting/             # Clean alert formatters
+│   ├── alerting/             # Clean human-readable alert formatters
 │   ├── cloud/                # Cloud and container security analyzer
 │   ├── correlation/          # Process tree, attack graph, and risk scorer
 │   ├── evaluator/            # Sigma operators and condition evaluator
@@ -116,4 +143,4 @@ eyedetect/
 ---
 
 ## 📜 License
-MIT License. Developed for University Capstone Project.
+MIT License. Developed as a University Capstone Project.
