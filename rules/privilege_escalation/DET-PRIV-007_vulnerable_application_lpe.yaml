@@ -1,0 +1,64 @@
+id: DET-PRIV-007
+name: "Application Privilege Escalation: Elevated Service Spawns Interactive Shell"
+description: Detects third-party or enterprise server applications running with NT AUTHORITY\SYSTEM / root privileges spawning interactive command shells (cmd.exe, powershell.exe, bash).
+version: 1
+status: enabled
+event_type: process_create
+
+level: 15
+severity: critical
+confidence: 0.96
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - field: process.user
+      operator: in
+      value:
+        - "NT AUTHORITY\\SYSTEM"
+        - "SYSTEM"
+        - "root"
+
+    - field: process.name
+      operator: in
+      value:
+        - cmd.exe
+        - powershell.exe
+        - pwsh.exe
+        - bash
+        - sh
+
+    - field: parent.name
+      operator: not_in
+      value:
+        - explorer.exe
+        - services.exe
+        - wininit.exe
+        - userinit.exe
+        - svchost.exe
+        - taskeng.exe
+        - systemd
+        - sshd
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+  - parent.name
+  - parent.pid
+
+mitre:
+  tactic: Privilege Escalation
+  technique: T1068
+  name: "Exploitation for Privilege Escalation: Application Exploitation"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_SI-4
+
+tags:
+  - attack.privilege_escalation
+  - app_lpe
+  - system_shell

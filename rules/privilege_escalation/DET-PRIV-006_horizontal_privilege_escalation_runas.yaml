@@ -1,0 +1,55 @@
+id: DET-PRIV-006
+name: Horizontal Privilege Escalation via RunAs or Sudo Account Hopping
+description: Detects command-line switching between peer user accounts (runas.exe /user:peer_user /netonly, su - otheruser) to access restricted data stores at the same privilege tier.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 12
+severity: high
+confidence: 0.90
+
+logic:
+  all:
+    - any:
+        - field: process.name
+          operator: in
+          value:
+            - runas.exe
+            - su
+            - sudo
+        - field: process.command_line
+          operator: contains
+          value: runas
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: "/user:"
+        - field: process.command_line
+          operator: contains
+          value: "/netonly"
+        - field: process.command_line
+          operator: contains
+          value: "-u "
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Privilege Escalation
+  technique: T1078
+  name: "Valid Accounts: Horizontal Account Hopping and RunAs Switching"
+
+compliance:
+  - PCI-DSS_10.2.5
+  - NIST_800-53_AC-2
+
+tags:
+  - attack.privilege_escalation
+  - horizontal_escalation
+  - runas
+  - account_switch
