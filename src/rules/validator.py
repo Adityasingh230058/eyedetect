@@ -18,6 +18,7 @@ VALID_OPERATORS = {
     "less_than",
     "has_ancestor",
     "in_threat_intel",
+    "entropy_greater_than",
 }
 
 

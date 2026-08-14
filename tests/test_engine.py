@@ -72,9 +72,10 @@ def test_end_to_end_detection_evaluation():
     }
 
     results = evaluator.evaluate_event(malicious_evt)
-    assert len(results) == 1
-    res = results[0]
-    assert res.rule.id == "DET-PROC-001"
+    matched_ids = [r.rule.id for r in results]
+    assert "DET-PROC-001" in matched_ids
+
+    res = next(r for r in results if r.rule.id == "DET-PROC-001")
     assert res.matched_evidence["process.name"] == "powershell.exe"
     assert res.matched_evidence["parent.name"] == "winword.exe"
     assert "-encodedcommand" in res.matched_evidence["process.command_line"]

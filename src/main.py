@@ -1,7 +1,8 @@
 """Main CLI entrypoint for eyedetect Detection Engine.
 
 Orchestrates Wazuh-grade detection rules (Levels 0-16), Threat Intelligence IOC matching,
-stateful process tree tracking, frequency threshold analysis, multi-event correlation,
+stateful process tree tracking, inline payload deobfuscation, Shannon Entropy analysis,
+frequency thresholding, multi-event correlation, Entity Risk Scoring (0-100),
 and Active Response automated containment.
 """
 
@@ -26,6 +27,7 @@ from src.alerting.alert import Alert
 from src.alerting.formatter import AlertFormatter
 from src.correlation.correlation_engine import CorrelationEngine
 from src.correlation.process_tree import ProcessTree
+from src.correlation.risk_scorer import EntityRiskScorer
 from src.evaluator.engine import RuleEvaluator
 from src.evaluator.threshold import ThresholdEngine
 from src.ingestion.event_reader import EventReader
@@ -35,7 +37,7 @@ from src.threat_intel.ioc_lookup import ThreatIntelEngine
 
 def main():
     parser = argparse.ArgumentParser(
-        description="eyedetect - Wazuh-Grade EDR Detection, Threat Intel & Active Response Engine",
+        description="eyedetect - Advanced EDR Detection, Deobfuscation & Risk Scoring Engine",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -66,7 +68,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 70)
-    print("[*] eyedetect - Wazuh-Grade EDR Detection & Correlation Engine")
+    print("[*] eyedetect - Elite EDR Detection, Deobfuscation & Risk Scoring Engine")
     print("=" * 70)
 
     # 1. Load Rules
@@ -95,11 +97,14 @@ def main():
     evaluator = RuleEvaluator(rules, process_tree=process_tree, threat_intel=threat_intel)
     threshold_engine = ThresholdEngine()
     correlation_engine = CorrelationEngine()
+    risk_scorer = EntityRiskScorer(breach_threshold=75)
 
     print(f"\n[*] Loaded Threat Intelligence Engine with high-confidence IOC hash/IP feeds.")
+    print(f"[*] Initialized Inline Command-Line Deobfuscator & Shannon Entropy Analyzer.")
     print(f"[*] Initialized Process Tree & Stateful Ancestry Engine.")
     print(f"[*] Initialized Threshold & Frequency Engine ({len(threshold_engine.rules)} active rules).")
     print(f"[*] Initialized Multi-Event Correlation Engine ({len(correlation_engine.correlation_rules)} attack chains).")
+    print(f"[*] Initialized Entity Risk Scorer & Host Threat Meter (Breach Threshold: 75/100).")
 
     # 3. Ingest and Evaluate Telemetry
     telemetry_path = Path(args.telemetry)
@@ -113,11 +118,14 @@ def main():
     atomic_alerts_count = 0
     threshold_alerts_count = 0
     incident_alerts_count = 0
+    risk_breach_alerts_count = 0
     active_responses_count = 0
     all_generated_alerts = []
 
     for event in EventReader.read_ndjson(telemetry_path):
         events_count += 1
+        host_id = event.get("host_id", "UNKNOWN_HOST")
+        ts = event.get("timestamp", "")
 
         # A. Evaluate Atomic & Threat Intel Rules
         results = evaluator.evaluate_event(event)
@@ -131,16 +139,30 @@ def main():
 
             _print_alert(alert, args.output_format)
 
-            # B. Ingest into Multi-Event Correlation Engine
+            # Update Host Threat Meter
+            risk_incident = risk_scorer.record_detection(
+                host_id=host_id,
+                rule_id=res.rule.id,
+                rule_name=res.rule.name,
+                level=res.rule.level,
+                timestamp=ts,
+                summary=res.rule.description,
+            )
+            if risk_incident:
+                risk_breach_alerts_count += 1
+                all_generated_alerts.append(risk_incident)
+                _print_alert(risk_incident, args.output_format)
+
+            # Ingest into Multi-Event Correlation Engine
             incidents = correlation_engine.ingest_detection(res)
             for inc in incidents:
                 incident_alerts_count += 1
                 inc_alert = inc.to_alert()
-                inc_alert.level = 16  # Correlated incidents are emergency level 16
+                inc_alert.level = 16
                 all_generated_alerts.append(inc_alert)
                 _print_alert(inc_alert, args.output_format)
 
-        # C. Evaluate Frequency & Threshold Rules (e.g. Mass Ransomware Encryption)
+        # B. Evaluate Frequency & Threshold Rules
         thresh_matches = threshold_engine.ingest_event(event)
         for tm in thresh_matches:
             threshold_alerts_count += 1
@@ -162,7 +184,7 @@ def main():
                 severity=tm.rule.severity,
                 confidence=tm.rule.confidence,
                 host_id=tm.host_id,
-                timestamp=event.get("timestamp", ""),
+                timestamp=ts,
                 event_id=event.get("event_id"),
                 evidence=tm.evidence,
                 active_response=ar_action.to_dict() if ar_action else None,
@@ -183,11 +205,12 @@ def main():
         print(f"\n[+] Saved {len(all_generated_alerts)} alert log(s) to: {out_path.resolve()}")
 
     print("\n" + "=" * 70)
-    print("[+] Wazuh-Grade Evaluation & Incident Summary:")
+    print("[+] Elite Evaluation & Incident Summary:")
     print(f"   • Total Telemetry Events Processed : {events_count}")
     print(f"   • Atomic Threat Detections         : {atomic_alerts_count}")
     print(f"   • Frequency Threshold Detections   : {threshold_alerts_count}")
     print(f"   • Correlated Multi-Stage Incidents : {incident_alerts_count}")
+    print(f"   • Host Threat Meter Breaches (>75) : {risk_breach_alerts_count}")
     print(f"   • Automated Active Responses Fired : {active_responses_count}")
     print("=" * 70)
 

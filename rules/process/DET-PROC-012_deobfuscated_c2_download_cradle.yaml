@@ -1,0 +1,46 @@
+id: DET-PROC-012
+name: Obfuscated PowerShell C2 Download Cradle (Inline Deobfuscation)
+description: Detects PowerShell executing remote download cradles (DownloadString / Net.WebClient) decoded in real-time from Base64 or obfuscated string representations.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 13
+severity: critical
+confidence: 0.95
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: powershell.exe
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: DownloadString
+        - field: process.command_line
+          operator: contains
+          value: Net.WebClient
+        - field: process.command_line
+          operator: contains
+          value: Invoke-WebRequest
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.deobfuscated_command
+  - process.evasion_techniques
+  - process.pid
+
+mitre:
+  tactic: Execution
+  technique: T1059.001
+  name: "Command and Scripting Interpreter: PowerShell Download Cradle"
+
+tags:
+  - attack.execution
+  - lolbas
+  - deobfuscation
