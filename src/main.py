@@ -2,7 +2,8 @@
 
 Orchestrates Wazuh-grade detection rules (Levels 0-16), Threat Intelligence IOC matching,
 MITRE ATT&CK Matrix Navigator, stateful process tree tracking, inline payload deobfuscation,
-Shannon Entropy analysis, frequency thresholding, multi-event correlation,
+Shannon Entropy analysis, C2 Beaconing Jitter Analysis, Lateral Port Scan Tracking,
+DGA & DNS Tunneling Analysis, frequency thresholding, multi-event correlation,
 Entity Risk Scoring (0-100), and Active Response automated containment.
 """
 
@@ -33,13 +34,15 @@ from src.evaluator.engine import RuleEvaluator
 from src.evaluator.threshold import ThresholdEngine
 from src.ingestion.event_reader import EventReader
 from src.mitre.attack import MitreMatrixNavigator
+from src.network.beacon_detector import C2BeaconDetector
+from src.network.port_scanner import PortScanDetector
 from src.rules.loader import RuleLoader
 from src.threat_intel.ioc_lookup import ThreatIntelEngine
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="eyedetect - Elite EDR Detection, MITRE Navigator, Deobfuscation & Risk Scoring Engine",
+        description="eyedetect - Elite EDR/NDR Detection, MITRE Navigator & Network Behavioral Engine",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -112,7 +115,7 @@ def main():
         print(f"[+] Exported MITRE ATT&CK Navigator Layer to: {out_layer_path.resolve()}")
 
     print("=" * 70)
-    print("[*] eyedetect - Elite EDR Detection, MITRE Navigator & Risk Engine")
+    print("[*] eyedetect - Elite EDR/NDR Detection & Behavioral Risk Engine")
     print("=" * 70)
 
     print(f"[*] Loaded and validated {len(rules)} active detection rule(s):")
@@ -126,9 +129,14 @@ def main():
     threshold_engine = ThresholdEngine()
     correlation_engine = CorrelationEngine()
     risk_scorer = EntityRiskScorer(breach_threshold=75)
+    beacon_detector = C2BeaconDetector(min_samples=4, max_cv_threshold=0.22)
+    port_scan_detector = PortScanDetector(horizontal_ip_threshold=5, vertical_port_threshold=6)
 
     print(f"\n[*] Loaded Threat Intelligence Engine with high-confidence IOC hash/IP feeds.")
     print(f"[*] Initialized Inline Command-Line Deobfuscator & Shannon Entropy Analyzer.")
+    print(f"[*] Initialized DGA Domain & DNS Tunneling Exfiltration Analyzers.")
+    print(f"[*] Initialized C2 Beaconing Periodic Heartbeat & Jitter Engine (CV <= 0.22).")
+    print(f"[*] Initialized Lateral Port Scanner & Subnet Reconnaissance Tracker.")
     print(f"[*] Initialized Process Tree & Stateful Ancestry Engine.")
     print(f"[*] Initialized Threshold & Frequency Engine ({len(threshold_engine.rules)} active rules).")
     print(f"[*] Initialized Multi-Event Correlation Engine ({len(correlation_engine.correlation_rules)} attack chains).")
@@ -145,6 +153,8 @@ def main():
     events_count = 0
     atomic_alerts_count = 0
     threshold_alerts_count = 0
+    beacon_alerts_count = 0
+    port_scan_alerts_count = 0
     incident_alerts_count = 0
     risk_breach_alerts_count = 0
     active_responses_count = 0
@@ -186,11 +196,67 @@ def main():
             for inc in incidents:
                 incident_alerts_count += 1
                 inc_alert = inc.to_alert()
-                inc_alert.level = 16
                 all_generated_alerts.append(inc_alert)
                 _print_alert(inc_alert, args.output_format)
 
-        # B. Evaluate Frequency & Threshold Rules
+        # B. Evaluate C2 Beaconing Periodic Engine
+        beacon_match = beacon_detector.ingest_connection(event)
+        if beacon_match:
+            beacon_alerts_count += 1
+            ar_action = ActiveResponseEngine.resolve_action(
+                level=14,
+                event=event,
+                custom_action="BLOCK_FIREWALL_IP",
+                reason=f"Periodic C2 Beaconing confirmed to {beacon_match.destination_ip}:{beacon_match.destination_port} (Interval: {beacon_match.mean_interval_seconds}s)",
+            )
+            if ar_action:
+                active_responses_count += 1
+
+            beacon_alert = Alert(
+                alert_id=f"ALT-BCN-{events_count}",
+                rule_id="DET-NET-004",
+                title="[BEHAVIORAL C2 BEACON] Automated Periodic Heartbeat Detected",
+                description=f"Identified consistent outbound beaconing to {beacon_match.destination_ip}:{beacon_match.destination_port} (Mean interval: {beacon_match.mean_interval_seconds}s, CV: {beacon_match.coefficient_of_variation}).",
+                level=14,
+                severity="critical",
+                confidence=beacon_match.confidence,
+                host_id=beacon_match.host_id,
+                timestamp=ts,
+                event_id=event.get("event_id"),
+                evidence=beacon_match.evidence,
+                active_response=ar_action.to_dict() if ar_action else None,
+                mitre_tactic="Command and Control",
+                mitre_technique="T1071.001",
+                tags=["attack.command_and_control", "c2_beaconing", "heartbeat_analysis"],
+            )
+            all_generated_alerts.append(beacon_alert)
+            _print_alert(beacon_alert, args.output_format)
+
+        # C. Evaluate Lateral Port Scanner & Subnet Sweeper
+        scan_matches = port_scan_detector.ingest_connection(event)
+        for sm in scan_matches:
+            port_scan_alerts_count += 1
+            scan_alert = Alert(
+                alert_id=f"ALT-SCAN-{events_count}",
+                rule_id="DET-NET-005",
+                title=f"[RECONNAISSANCE] {sm.scan_type}",
+                description=f"Host initiated rapid network probes ({sm.target_summary}) within {sm.time_window_seconds}s.",
+                level=12,
+                severity="high",
+                confidence=0.92,
+                host_id=sm.host_id,
+                timestamp=ts,
+                event_id=event.get("event_id"),
+                evidence=sm.evidence,
+                active_response=None,
+                mitre_tactic="Discovery",
+                mitre_technique="T1046",
+                tags=["attack.discovery", "lateral_reconnaissance", "port_scan"],
+            )
+            all_generated_alerts.append(scan_alert)
+            _print_alert(scan_alert, args.output_format)
+
+        # D. Evaluate Frequency & Threshold Rules
         thresh_matches = threshold_engine.ingest_event(event)
         for tm in thresh_matches:
             threshold_alerts_count += 1
@@ -236,6 +302,8 @@ def main():
     print("[+] Elite Evaluation & Incident Summary:")
     print(f"   • Total Telemetry Events Processed : {events_count}")
     print(f"   • Atomic Threat Detections         : {atomic_alerts_count}")
+    print(f"   • C2 Beaconing Periodic Detections : {beacon_alerts_count}")
+    print(f"   • Network Port Scans / Sweeps      : {port_scan_alerts_count}")
     print(f"   • Frequency Threshold Detections   : {threshold_alerts_count}")
     print(f"   • Correlated Multi-Stage Incidents : {incident_alerts_count}")
     print(f"   • Host Threat Meter Breaches (>75) : {risk_breach_alerts_count}")

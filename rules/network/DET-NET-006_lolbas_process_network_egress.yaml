@@ -1,0 +1,51 @@
+id: DET-NET-006
+name: LOLBAS Binary Initiates Suspicious Outbound Network Connection
+description: Detects native Windows utilities (mshta, rundll32, regsvr32, certutil, notepad, calc) initiating outbound network sockets to external IP addresses.
+version: 1
+status: enabled
+event_type: network_connect
+
+level: 11
+severity: high
+confidence: 0.90
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - field: process.name
+      operator: in
+      value:
+        - mshta.exe
+        - rundll32.exe
+        - regsvr32.exe
+        - certutil.exe
+        - calc.exe
+        - notepad.exe
+        - wscript.exe
+        - cscript.exe
+
+    - field: network.direction
+      operator: equals
+      value: outbound
+
+evidence:
+  - process.name
+  - process.pid
+  - process.command_line
+  - network.destination_ip
+  - network.destination_port
+
+mitre:
+  tactic: Command and Control
+  technique: T1071
+  name: "Application Layer Protocol: LOLBAS Network Egress"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_AC-4
+
+tags:
+  - attack.command_and_control
+  - lolbas
+  - network_egress

@@ -47,6 +47,18 @@ def extract_field(
         if guid:
             return [a.name for a in process_tree.get_ancestors(guid)]
 
+    # Dynamic DNS & DGA fields
+    if field_path.startswith("network.is_dga") or field_path.startswith("network.is_dns_tunneling") or field_path.startswith("network.domain_entropy"):
+        from src.network.dns_analyzer import DnsAnalyzer
+        domain = event.get("network", {}).get("dns_query") or event.get("network", {}).get("destination_domain") or event.get("dns", {}).get("query")
+        dns_res = DnsAnalyzer.analyze_domain(domain)
+        if field_path == "network.is_dga":
+            return dns_res["is_dga"]
+        if field_path == "network.is_dns_tunneling":
+            return dns_res["is_tunneling"]
+        if field_path == "network.domain_entropy":
+            return dns_res["entropy"]
+
     # Dynamic ThreatIntel fields
     if field_path == "threat_intel.hash_match" and threat_intel:
         file_hash = proc.get("file_hash") or event.get("file", {}).get("hash")
