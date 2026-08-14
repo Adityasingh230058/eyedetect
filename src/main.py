@@ -3,8 +3,8 @@
 Orchestrates Wazuh-grade detection rules (Levels 0-16), Threat Intelligence IOC matching,
 MITRE ATT&CK Matrix Navigator, stateful process tree tracking, inline payload deobfuscation,
 Shannon Entropy analysis, C2 Beaconing Jitter Analysis, Lateral Port Scan Tracking,
-DGA & DNS Tunneling Analysis, frequency thresholding, multi-event correlation,
-Entity Risk Scoring (0-100), and Active Response automated containment.
+DGA & DNS Tunneling Analysis, Ransomware Canary Shield, Endpoint Threat Remediation & Auto-Fixing,
+frequency thresholding, multi-event correlation, Entity Risk Scoring (0-100), and Active Response.
 """
 
 import argparse
@@ -36,13 +36,15 @@ from src.ingestion.event_reader import EventReader
 from src.mitre.attack import MitreMatrixNavigator
 from src.network.beacon_detector import C2BeaconDetector
 from src.network.port_scanner import PortScanDetector
+from src.remediation.engine import EndpointRemediationEngine
+from src.remediation.ransomware_shield import RansomwareShield
 from src.rules.loader import RuleLoader
 from src.threat_intel.ioc_lookup import ThreatIntelEngine
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="eyedetect - Elite EDR/NDR Detection, MITRE Navigator & Network Behavioral Engine",
+        description="eyedetect - Elite EDR/NDR Detection, Remediation & System Auto-Fixing Engine",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -80,6 +82,12 @@ def main():
         default=None,
         help="Export official MITRE ATT&CK Navigator v4 JSON Layer file",
     )
+    parser.add_argument(
+        "--auto-remediate",
+        action="store_true",
+        default=True,
+        help="Execute automated threat remediation, process killing, file quarantine, and persistence reversal",
+    )
 
     args = parser.parse_args()
 
@@ -115,7 +123,7 @@ def main():
         print(f"[+] Exported MITRE ATT&CK Navigator Layer to: {out_layer_path.resolve()}")
 
     print("=" * 70)
-    print("[*] eyedetect - Elite EDR/NDR Detection & Behavioral Risk Engine")
+    print("[*] eyedetect - Elite EDR/NDR Detection & Remediation Engine")
     print("=" * 70)
 
     print(f"[*] Loaded and validated {len(rules)} active detection rule(s):")
@@ -131,9 +139,13 @@ def main():
     risk_scorer = EntityRiskScorer(breach_threshold=75)
     beacon_detector = C2BeaconDetector(min_samples=4, max_cv_threshold=0.22)
     port_scan_detector = PortScanDetector(horizontal_ip_threshold=5, vertical_port_threshold=6)
+    ransomware_shield = RansomwareShield(burst_threshold=4, burst_window_seconds=5.0)
+    remediation_engine = EndpointRemediationEngine(dry_run=False)
 
     print(f"\n[*] Loaded Threat Intelligence Engine with high-confidence IOC hash/IP feeds.")
     print(f"[*] Initialized Inline Command-Line Deobfuscator & Shannon Entropy Analyzer.")
+    print(f"[*] Initialized Ransomware Shield & Decoy Canary Tripwire Protection.")
+    print(f"[*] Initialized Endpoint Remediation Engine (Process Tree Killing, File Quarantine, Persistence Reversal).")
     print(f"[*] Initialized DGA Domain & DNS Tunneling Exfiltration Analyzers.")
     print(f"[*] Initialized C2 Beaconing Periodic Heartbeat & Jitter Engine (CV <= 0.22).")
     print(f"[*] Initialized Lateral Port Scanner & Subnet Reconnaissance Tracker.")
@@ -155,9 +167,11 @@ def main():
     threshold_alerts_count = 0
     beacon_alerts_count = 0
     port_scan_alerts_count = 0
+    ransomware_shield_alerts = 0
     incident_alerts_count = 0
     risk_breach_alerts_count = 0
     active_responses_count = 0
+    remediations_executed = 0
     all_generated_alerts = []
 
     for event in EventReader.read_ndjson(telemetry_path):
@@ -176,6 +190,18 @@ def main():
                 active_responses_count += 1
 
             _print_alert(alert, args.output_format)
+
+            # Automated Threat Remediation (Level >= 11 or explicit critical)
+            if args.auto_remediate and res.rule.level >= 11:
+                rem_report = remediation_engine.remediate_threat(
+                    rule_id=res.rule.id,
+                    threat_name=res.rule.name,
+                    event=event,
+                    custom_action=res.rule.active_response,
+                )
+                if rem_report.actions_executed:
+                    remediations_executed += len(rem_report.actions_executed)
+                    _print_remediation(rem_report)
 
             # Update Host Threat Meter
             risk_incident = risk_scorer.record_detection(
@@ -199,7 +225,42 @@ def main():
                 all_generated_alerts.append(inc_alert)
                 _print_alert(inc_alert, args.output_format)
 
-        # B. Evaluate C2 Beaconing Periodic Engine
+        # B. Evaluate Ransomware Shield & Canary Tripwires
+        canary_match = ransomware_shield.inspect_file_event(event)
+        if canary_match:
+            ransomware_shield_alerts += 1
+            canary_alert = Alert(
+                alert_id=f"ALT-RANS-{events_count}",
+                rule_id="DET-RANS-001",
+                title=f"[RANSOMWARE SHIELD] {canary_match.threat_type}",
+                description=f"Immediate threat detected: Process '{canary_match.process_name}' (PID: {canary_match.pid}) breached ransomware protection tripwire.",
+                level=16,
+                severity="critical",
+                confidence=canary_match.confidence,
+                host_id=canary_match.host_id,
+                timestamp=ts,
+                event_id=event.get("event_id"),
+                evidence=canary_match.evidence,
+                active_response={"action": "TERMINATE_PROCESS", "target_pid": canary_match.pid, "isolate_host": True},
+                mitre_tactic="Impact",
+                mitre_technique="T1486",
+                tags=["attack.impact", "ransomware_shield", "canary_tripwire"],
+            )
+            all_generated_alerts.append(canary_alert)
+            _print_alert(canary_alert, args.output_format)
+
+            if args.auto_remediate:
+                rem_report = remediation_engine.remediate_threat(
+                    rule_id="DET-RANS-001",
+                    threat_name=canary_match.threat_type,
+                    event=event,
+                    custom_action="ISOLATE_HOST",
+                )
+                if rem_report.actions_executed:
+                    remediations_executed += len(rem_report.actions_executed)
+                    _print_remediation(rem_report)
+
+        # C. Evaluate C2 Beaconing Periodic Engine
         beacon_match = beacon_detector.ingest_connection(event)
         if beacon_match:
             beacon_alerts_count += 1
@@ -232,7 +293,7 @@ def main():
             all_generated_alerts.append(beacon_alert)
             _print_alert(beacon_alert, args.output_format)
 
-        # C. Evaluate Lateral Port Scanner & Subnet Sweeper
+        # D. Evaluate Lateral Port Scanner & Subnet Sweeper
         scan_matches = port_scan_detector.ingest_connection(event)
         for sm in scan_matches:
             port_scan_alerts_count += 1
@@ -256,7 +317,7 @@ def main():
             all_generated_alerts.append(scan_alert)
             _print_alert(scan_alert, args.output_format)
 
-        # D. Evaluate Frequency & Threshold Rules
+        # E. Evaluate Frequency & Threshold Rules
         thresh_matches = threshold_engine.ingest_event(event)
         for tm in thresh_matches:
             threshold_alerts_count += 1
@@ -302,12 +363,13 @@ def main():
     print("[+] Elite Evaluation & Incident Summary:")
     print(f"   • Total Telemetry Events Processed : {events_count}")
     print(f"   • Atomic Threat Detections         : {atomic_alerts_count}")
+    print(f"   • Ransomware Shield Tripwires Fired: {ransomware_shield_alerts}")
     print(f"   • C2 Beaconing Periodic Detections : {beacon_alerts_count}")
     print(f"   • Network Port Scans / Sweeps      : {port_scan_alerts_count}")
     print(f"   • Frequency Threshold Detections   : {threshold_alerts_count}")
     print(f"   • Correlated Multi-Stage Incidents : {incident_alerts_count}")
     print(f"   • Host Threat Meter Breaches (>75) : {risk_breach_alerts_count}")
-    print(f"   • Automated Active Responses Fired : {active_responses_count}")
+    print(f"   • Automated Remediation Playbooks  : {remediations_executed} action(s) executed")
     print("=" * 70)
 
 
@@ -318,6 +380,13 @@ def _print_alert(alert: Alert, fmt: str):
         print(AlertFormatter.to_json(alert))
     elif fmt == "ndjson":
         print(AlertFormatter.to_ndjson(alert))
+
+
+def _print_remediation(report):
+    print("  \033[92m⚡ [THREAT REMEDIATED / SYSTEM RESTORED]\033[0m")
+    for act in report.actions_executed:
+        print(f"      -> Action : {act.action_type:<20} | Target: {act.target_entity} | Status: {act.status}")
+    print("=" * 70)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,54 @@
+id: DET-CRED-001
+name: SAM and SYSTEM Registry Hive Dumping Attempt
+description: Detects command-line utilities (reg.exe save) attempting to dump SAM, SYSTEM, or SECURITY registry hives to steal local account password hashes.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 15
+severity: critical
+confidence: 0.95
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: reg.exe
+
+    - field: process.command_line
+      operator: contains
+      value: save
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: "hklm\\sam"
+        - field: process.command_line
+          operator: contains
+          value: "hklm\\system"
+        - field: process.command_line
+          operator: contains
+          value: "hklm\\security"
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Credential Access
+  technique: T1003.002
+  name: "OS Credential Dumping: Security Account Manager (SAM)"
+
+compliance:
+  - PCI-DSS_10.2.1
+  - NIST_800-53_IA-5
+  - ISO_27001_A.9.4.3
+
+tags:
+  - attack.credential_access
+  - sam_dump
+  - password_theft
