@@ -4,6 +4,7 @@ Orchestrates Wazuh-grade detection rules (Levels 0-16), Threat Intelligence IOC 
 MITRE ATT&CK Matrix Navigator, stateful process tree tracking, inline payload deobfuscation,
 Shannon Entropy analysis, C2 Beaconing Jitter Analysis, Lateral Port Scan Tracking,
 DGA & DNS Tunneling Analysis, Ransomware Canary Shield, ITDR & Identity Threat / UEBA Analytics,
+Cloud Threat Engine & Workload Protection, Enterprise-Wide Multi-Hop Incident Graph,
 Endpoint Threat Remediation & Auto-Fixing, frequency thresholding, multi-event correlation,
 Entity Risk Scoring (0-100), and Active Response.
 """
@@ -28,7 +29,9 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.alerting.active_response import ActiveResponseEngine
 from src.alerting.alert import Alert
 from src.alerting.formatter import AlertFormatter
+from src.cloud.cloud_engine import CloudThreatEngine
 from src.correlation.correlation_engine import CorrelationEngine
+from src.correlation.enterprise_graph import EnterpriseAttackGraph
 from src.correlation.process_tree import ProcessTree
 from src.correlation.risk_scorer import EntityRiskScorer
 from src.evaluator.engine import RuleEvaluator
@@ -46,7 +49,7 @@ from src.threat_intel.ioc_lookup import ThreatIntelEngine
 
 def main():
     parser = argparse.ArgumentParser(
-        description="eyedetect - Elite EDR/NDR/ITDR Detection, Remediation & System Auto-Fixing Engine",
+        description="eyedetect - Elite Enterprise XDR / EDR / NDR / ITDR / Cloud Detection & Remediation Engine",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -88,7 +91,7 @@ def main():
         "--auto-remediate",
         action="store_true",
         default=True,
-        help="Execute automated threat remediation, process killing, file quarantine, persistence reversal, and account lockouts",
+        help="Execute automated threat remediation, process killing, file quarantine, persistence reversal, account lockouts, and cloud key revocations",
     )
 
     args = parser.parse_args()
@@ -125,7 +128,7 @@ def main():
         print(f"[+] Exported MITRE ATT&CK Navigator Layer to: {out_layer_path.resolve()}")
 
     print("=" * 70)
-    print("[*] eyedetect - Elite EDR/NDR/ITDR Detection & Remediation Engine")
+    print("[*] eyedetect - Elite Enterprise XDR & Cross-Domain Threat Engine")
     print("=" * 70)
 
     print(f"[*] Loaded and validated {len(rules)} active detection rule(s):")
@@ -143,13 +146,17 @@ def main():
     port_scan_detector = PortScanDetector(horizontal_ip_threshold=5, vertical_port_threshold=6)
     ransomware_shield = RansomwareShield(burst_threshold=4, burst_window_seconds=5.0)
     identity_engine = IdentityAnalyticsEngine(brute_force_threshold=5, spray_account_threshold=4)
+    cloud_engine = CloudThreatEngine()
+    enterprise_graph = EnterpriseAttackGraph()
     remediation_engine = EndpointRemediationEngine(dry_run=False)
 
     print(f"\n[*] Loaded Threat Intelligence Engine with high-confidence IOC hash/IP feeds.")
     print(f"[*] Initialized Inline Command-Line Deobfuscator & Shannon Entropy Analyzer.")
     print(f"[*] Initialized Ransomware Shield & Decoy Canary Tripwire Protection.")
     print(f"[*] Initialized ITDR Identity Threat Engine & UEBA Behavioral Analytics.")
-    print(f"[*] Initialized Endpoint & Identity Remediation Engine (Account Lockout, Token Revocation).")
+    print(f"[*] Initialized Multi-Cloud Threat & Kubernetes Workload Security Engine.")
+    print(f"[*] Initialized Enterprise-Wide Attack Graph & Multi-Hop Pivot Tracker.")
+    print(f"[*] Initialized Enterprise Auto-Remediation Playbooks (Cloud Keys, Pods, Endpoints).")
     print(f"[*] Initialized DGA Domain & DNS Tunneling Exfiltration Analyzers.")
     print(f"[*] Initialized C2 Beaconing Periodic Heartbeat & Jitter Engine (CV <= 0.22).")
     print(f"[*] Initialized Lateral Port Scanner & Subnet Reconnaissance Tracker.")
@@ -173,6 +180,8 @@ def main():
     port_scan_alerts_count = 0
     ransomware_shield_alerts = 0
     identity_threat_alerts = 0
+    cloud_threat_alerts = 0
+    enterprise_campaign_alerts = 0
     incident_alerts_count = 0
     risk_breach_alerts_count = 0
     active_responses_count = 0
@@ -181,7 +190,7 @@ def main():
 
     for event in EventReader.read_ndjson(telemetry_path):
         events_count += 1
-        host_id = event.get("host_id", "UNKNOWN_HOST")
+        host_id = event.get("host_id") or event.get("cloud", {}).get("account_id") or "UNKNOWN_HOST"
         ts = event.get("timestamp", "")
 
         # A. Evaluate Atomic & Threat Intel Rules
@@ -195,6 +204,47 @@ def main():
                 active_responses_count += 1
 
             _print_alert(alert, args.output_format)
+
+            # Record in Enterprise Attack Graph
+            dest_host = event.get("network", {}).get("destination_ip") or event.get("target_host")
+            if dest_host:
+                campaign = enterprise_graph.record_attack_step(
+                    source_id=host_id,
+                    source_type="ENDPOINT",
+                    target_id=dest_host,
+                    target_type="ENDPOINT",
+                    pivot_mechanism=res.rule.name,
+                    rule_id=res.rule.id,
+                    timestamp=ts,
+                    details={"user": event.get("user", {}).get("name")},
+                )
+                if campaign:
+                    enterprise_campaign_alerts += 1
+                    ent_alert = Alert(
+                        alert_id=campaign.incident_id,
+                        rule_id="CORR-ENT-001",
+                        title=f"[ENTERPRISE CAMPAIGN] {campaign.title}",
+                        description=f"Multi-hop lateral movement pivot path identified: {' -> '.join(campaign.lateral_pivot_path)}",
+                        level=16,
+                        severity="critical",
+                        confidence=campaign.confidence,
+                        host_id=campaign.root_cause_asset,
+                        timestamp=ts,
+                        event_id=event.get("event_id"),
+                        evidence={"pivot_chain": campaign.lateral_pivot_path, "root_cause_asset": campaign.root_cause_asset},
+                        active_response={"action": "ENTERPRISE_ISOLATE_PIVOT_PATH", "isolated_assets": campaign.lateral_pivot_path},
+                        mitre_tactic="Lateral Movement",
+                        mitre_technique="T1021",
+                        tags=["attack.enterprise_campaign", "multi_hop_pivot", "cross_domain"],
+                    )
+                    all_generated_alerts.append(ent_alert)
+                    _print_alert(ent_alert, args.output_format)
+
+                    if args.auto_remediate:
+                        rem_report = remediation_engine.remediate_enterprise_campaign(campaign)
+                        if rem_report.actions_executed:
+                            remediations_executed += len(rem_report.actions_executed)
+                            _print_remediation(rem_report)
 
             # Automated Threat Remediation (Level >= 11 or explicit critical)
             if args.auto_remediate and res.rule.level >= 11:
@@ -230,7 +280,37 @@ def main():
                 all_generated_alerts.append(inc_alert)
                 _print_alert(inc_alert, args.output_format)
 
-        # B. Evaluate ITDR & Identity Analytics Engine (UEBA)
+        # B. Evaluate Cloud & Workload Threat Engine
+        cloud_matches = cloud_engine.inspect_cloud_event(event)
+        for cm in cloud_matches:
+            cloud_threat_alerts += 1
+            c_alert = Alert(
+                alert_id=f"ALT-CLOUD-{events_count}",
+                rule_id="DET-CLOUD-001",
+                title=f"[CLOUD THREAT] {cm.threat_type}",
+                description=f"Cloud anomaly detected on {cm.cloud_provider} account '{cm.account_or_project_id}' for resource '{cm.resource_id}'.",
+                level=15,
+                severity="critical",
+                confidence=cm.confidence,
+                host_id=cm.account_or_project_id,
+                timestamp=ts,
+                event_id=event.get("event_id"),
+                evidence=cm.evidence,
+                active_response={"action": cm.remediation_required, "target_resource": cm.resource_id},
+                mitre_tactic="Exfiltration" if "Storage" in cm.threat_type else "Persistence",
+                mitre_technique="T1530" if "Storage" in cm.threat_type else "T1098.001",
+                tags=["attack.cloud", f"cloud.{cm.cloud_provider.lower()}", "workload_security"],
+            )
+            all_generated_alerts.append(c_alert)
+            _print_alert(c_alert, args.output_format)
+
+            if args.auto_remediate:
+                rem_report = remediation_engine.remediate_cloud_threat(cm)
+                if rem_report.actions_executed:
+                    remediations_executed += len(rem_report.actions_executed)
+                    _print_remediation(rem_report)
+
+        # C. Evaluate ITDR & Identity Analytics Engine (UEBA)
         id_matches = identity_engine.ingest_identity_event(event)
         for idm in id_matches:
             identity_threat_alerts += 1
@@ -260,7 +340,7 @@ def main():
                     remediations_executed += len(rem_report.actions_executed)
                     _print_remediation(rem_report)
 
-        # C. Evaluate Ransomware Shield & Canary Tripwires
+        # D. Evaluate Ransomware Shield & Canary Tripwires
         canary_match = ransomware_shield.inspect_file_event(event)
         if canary_match:
             ransomware_shield_alerts += 1
@@ -295,7 +375,7 @@ def main():
                     remediations_executed += len(rem_report.actions_executed)
                     _print_remediation(rem_report)
 
-        # D. Evaluate C2 Beaconing Periodic Engine
+        # E. Evaluate C2 Beaconing Periodic Engine
         beacon_match = beacon_detector.ingest_connection(event)
         if beacon_match:
             beacon_alerts_count += 1
@@ -328,7 +408,7 @@ def main():
             all_generated_alerts.append(beacon_alert)
             _print_alert(beacon_alert, args.output_format)
 
-        # E. Evaluate Lateral Port Scanner & Subnet Sweeper
+        # F. Evaluate Lateral Port Scanner & Subnet Sweeper
         scan_matches = port_scan_detector.ingest_connection(event)
         for sm in scan_matches:
             port_scan_alerts_count += 1
@@ -352,7 +432,7 @@ def main():
             all_generated_alerts.append(scan_alert)
             _print_alert(scan_alert, args.output_format)
 
-        # F. Evaluate Frequency & Threshold Rules
+        # G. Evaluate Frequency & Threshold Rules
         thresh_matches = threshold_engine.ingest_event(event)
         for tm in thresh_matches:
             threshold_alerts_count += 1
@@ -398,6 +478,8 @@ def main():
     print("[+] Elite Evaluation & Incident Summary:")
     print(f"   • Total Telemetry Events Processed : {events_count}")
     print(f"   • Atomic Threat Detections         : {atomic_alerts_count}")
+    print(f"   • Cloud & Workload Threat Matches  : {cloud_threat_alerts}")
+    print(f"   • Enterprise Multi-Hop Campaigns   : {enterprise_campaign_alerts}")
     print(f"   • Identity & UEBA Threat Detections: {identity_threat_alerts}")
     print(f"   • Ransomware Shield Tripwires Fired: {ransomware_shield_alerts}")
     print(f"   • C2 Beaconing Periodic Detections : {beacon_alerts_count}")
@@ -421,7 +503,7 @@ def _print_alert(alert: Alert, fmt: str):
 def _print_remediation(report):
     print("  \033[92m⚡ [THREAT REMEDIATED / SYSTEM RESTORED]\033[0m")
     for act in report.actions_executed:
-        print(f"      -> Action : {act.action_type:<20} | Target: {act.target_entity} | Status: {act.status}")
+        print(f"      -> Action : {act.action_type:<28} | Target: {act.target_entity} | Status: {act.status}")
     print("=" * 70)
 
 

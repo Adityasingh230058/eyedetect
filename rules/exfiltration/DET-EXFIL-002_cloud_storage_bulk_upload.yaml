@@ -1,0 +1,60 @@
+id: DET-EXFIL-002
+name: Exfiltration to Cloud Storage via CLI Utility
+description: Detects command-line synchronization or upload of files to external cloud storage (AWS CLI, rclone, Mega, AzCopy, Gsutil) indicating mass corporate data exfiltration.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 14
+severity: critical
+confidence: 0.95
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - field: process.name
+      operator: in
+      value:
+        - aws.exe
+        - rclone.exe
+        - azcopy.exe
+        - gsutil.exe
+        - mega-cmd.exe
+        - rclone
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: "s3 cp"
+        - field: process.command_line
+          operator: contains
+          value: "s3 sync"
+        - field: process.command_line
+          operator: contains
+          value: "copy"
+        - field: process.command_line
+          operator: contains
+          value: "sync"
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Exfiltration
+  technique: T1567.002
+  name: "Exfiltration Over Web Service: Exfiltration to Cloud Storage"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_SI-4
+  - ISO_27001_A.13.2
+
+tags:
+  - attack.exfiltration
+  - cloud_exfil
+  - rclone
+  - s3_exfiltration

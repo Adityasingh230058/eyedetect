@@ -1,0 +1,48 @@
+id: DET-LAT-002
+name: Lateral Movement Pivot via Remote RDP or SSH Session
+description: Detects command-line or programmatic initiation of mstsc.exe, ssh.exe, or plink.exe to pivot laterally to internal workstations and servers.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 12
+severity: high
+confidence: 0.90
+
+logic:
+  all:
+    - field: process.name
+      operator: in
+      value:
+        - mstsc.exe
+        - ssh.exe
+        - plink.exe
+        - putty.exe
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: "/v:"
+        - field: process.command_line
+          operator: regex
+          value: "@[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}"
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - parent.name
+
+mitre:
+  tactic: Lateral Movement
+  technique: T1021.001
+  name: "Remote Services: Remote Desktop Protocol / SSH Lateral Pivot"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_AC-4
+
+tags:
+  - attack.lateral_movement
+  - rdp
+  - ssh_pivot

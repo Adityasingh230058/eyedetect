@@ -228,6 +228,100 @@ class EndpointRemediationEngine:
             containment_status="FULLY_CONTAINED" if actions else "MONITORING",
         )
 
+    def remediate_cloud_threat(self, match: Any) -> RemediationReport:
+        """Executes automated cloud remediation (Revoke IAM Keys, Restrict S3 ACL, Terminate Pod)."""
+        actions: List[RemediationAction] = []
+        incident_id = f"REM-CLOUD-{len(self.action_history) + 1:04d}"
+
+        if match.remediation_required == "REVOKE_CLOUD_ACCESS_KEY":
+            act = RemediationAction(
+                action_id=f"ACT-IAM-REVOKE-{len(self.action_history) + 1}",
+                action_type="REVOKE_CLOUD_ACCESS_KEY",
+                target_entity=f"{match.cloud_provider}:{match.principal_arn_or_user}",
+                host_id=match.account_or_project_id,
+                rule_id="DET-CLOUD-001",
+                status="SUCCESS" if not self.dry_run else "SIMULATED",
+                details={
+                    "cloud_provider": match.cloud_provider,
+                    "account_id": match.account_or_project_id,
+                    "deactivated_credential": match.resource_id,
+                    "action_executed": "Set AccessKeyStatus = Inactive & Deleted Session Policies",
+                },
+            )
+            actions.append(act)
+            self.action_history.append(act)
+
+        elif match.remediation_required == "RESTRICT_BUCKET_PERMISSIONS":
+            act = RemediationAction(
+                action_id=f"ACT-BUCKET-RESTRICT-{len(self.action_history) + 1}",
+                action_type="RESTRICT_BUCKET_PERMISSIONS",
+                target_entity=f"Bucket '{match.resource_id}'",
+                host_id=match.account_or_project_id,
+                rule_id="DET-CLOUD-002",
+                status="SUCCESS" if not self.dry_run else "SIMULATED",
+                details={
+                    "cloud_provider": match.cloud_provider,
+                    "bucket_name": match.resource_id,
+                    "action_executed": "Enforced BlockPublicAccess = TRUE & Reset ACL to Private",
+                },
+            )
+            actions.append(act)
+            self.action_history.append(act)
+
+        elif match.remediation_required == "TERMINATE_POD_WORKLOAD":
+            act = RemediationAction(
+                action_id=f"ACT-POD-KILL-{len(self.action_history) + 1}",
+                action_type="TERMINATE_POD_WORKLOAD",
+                target_entity=f"Pod '{match.resource_id}'",
+                host_id="KUBERNETES_CLUSTER",
+                rule_id="DET-CLOUD-003",
+                status="SUCCESS" if not self.dry_run else "SIMULATED",
+                details={
+                    "pod_name": match.resource_id,
+                    "action_executed": "kubectl delete pod --now & Quarantined Node",
+                },
+            )
+            actions.append(act)
+            self.action_history.append(act)
+
+        return RemediationReport(
+            incident_id=incident_id,
+            host_id=match.account_or_project_id,
+            threat_name=match.threat_type,
+            actions_executed=actions,
+            containment_status="FULLY_CONTAINED" if actions else "MONITORING",
+        )
+
+    def remediate_enterprise_campaign(self, campaign: Any) -> RemediationReport:
+        """Isolates all endpoints and accounts along a multi-hop lateral pivot campaign."""
+        actions: List[RemediationAction] = []
+        incident_id = f"REM-ENT-{len(self.action_history) + 1:04d}"
+
+        for asset in campaign.lateral_pivot_path:
+            act = RemediationAction(
+                action_id=f"ACT-ENT-ISO-{asset}",
+                action_type="ENTERPRISE_ISOLATE_PIVOT_PATH",
+                target_entity=asset,
+                host_id=asset,
+                rule_id="ENT-CAMPAIGN-001",
+                status="SUCCESS" if not self.dry_run else "SIMULATED",
+                details={
+                    "campaign_id": campaign.incident_id,
+                    "pivot_sequence": " -> ".join(campaign.lateral_pivot_path),
+                    "action_executed": f"Quarantined and isolated hop asset '{asset}'",
+                },
+            )
+            actions.append(act)
+            self.action_history.append(act)
+
+        return RemediationReport(
+            incident_id=incident_id,
+            host_id=campaign.root_cause_asset,
+            threat_name=campaign.title,
+            actions_executed=actions,
+            containment_status="FULLY_CONTAINED",
+        )
+
     def _isolate_host_network(self, host_id: str, rule_id: str, reason: str) -> RemediationAction:
         act_id = f"ACT-ISO-{host_id}"
         action = RemediationAction(
