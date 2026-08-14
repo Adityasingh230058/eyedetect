@@ -1,12 +1,13 @@
 """Main CLI entrypoint for eyedetect Detection Engine.
 
 Orchestrates Wazuh-grade detection rules (Levels 0-16), Threat Intelligence IOC matching,
-stateful process tree tracking, inline payload deobfuscation, Shannon Entropy analysis,
-frequency thresholding, multi-event correlation, Entity Risk Scoring (0-100),
-and Active Response automated containment.
+MITRE ATT&CK Matrix Navigator, stateful process tree tracking, inline payload deobfuscation,
+Shannon Entropy analysis, frequency thresholding, multi-event correlation,
+Entity Risk Scoring (0-100), and Active Response automated containment.
 """
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -31,13 +32,14 @@ from src.correlation.risk_scorer import EntityRiskScorer
 from src.evaluator.engine import RuleEvaluator
 from src.evaluator.threshold import ThresholdEngine
 from src.ingestion.event_reader import EventReader
+from src.mitre.attack import MitreMatrixNavigator
 from src.rules.loader import RuleLoader
 from src.threat_intel.ioc_lookup import ThreatIntelEngine
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="eyedetect - Advanced EDR Detection, Deobfuscation & Risk Scoring Engine",
+        description="eyedetect - Elite EDR Detection, MITRE Navigator, Deobfuscation & Risk Scoring Engine",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -64,12 +66,19 @@ def main():
         default=None,
         help="Optional path to save generated alerts (NDJSON format)",
     )
+    parser.add_argument(
+        "--mitre-matrix",
+        action="store_true",
+        help="Display full MITRE ATT&CK Matrix Coverage Heatmap across loaded rules",
+    )
+    parser.add_argument(
+        "--export-navigator",
+        type=str,
+        default=None,
+        help="Export official MITRE ATT&CK Navigator v4 JSON Layer file",
+    )
 
     args = parser.parse_args()
-
-    print("=" * 70)
-    print("[*] eyedetect - Elite EDR Detection, Deobfuscation & Risk Scoring Engine")
-    print("=" * 70)
 
     # 1. Load Rules
     rules_path = Path(args.rules)
@@ -86,6 +95,25 @@ def main():
     except Exception as e:
         print(f"[ERROR] Failed to load rules: {e}")
         sys.exit(1)
+
+    # MITRE ATT&CK Matrix Heatmap Request
+    if args.mitre_matrix:
+        print(MitreMatrixNavigator.render_console_heatmap(rules))
+        if not args.telemetry:
+            return
+
+    # Export Navigator Layer Request
+    if args.export_navigator:
+        nav_layer = MitreMatrixNavigator.export_navigator_layer(rules)
+        out_layer_path = Path(args.export_navigator)
+        out_layer_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_layer_path, "w", encoding="utf-8") as f:
+            json.dump(nav_layer, f, indent=2)
+        print(f"[+] Exported MITRE ATT&CK Navigator Layer to: {out_layer_path.resolve()}")
+
+    print("=" * 70)
+    print("[*] eyedetect - Elite EDR Detection, MITRE Navigator & Risk Engine")
+    print("=" * 70)
 
     print(f"[*] Loaded and validated {len(rules)} active detection rule(s):")
     for r in sorted(rules, key=lambda x: -x.level):

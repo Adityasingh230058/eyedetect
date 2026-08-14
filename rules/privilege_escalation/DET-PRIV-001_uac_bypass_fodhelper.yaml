@@ -1,0 +1,50 @@
+id: DET-PRIV-001
+name: UAC Bypass via Fodhelper Registry Hijacking
+description: Detects elevation of privilege attempts using fodhelper.exe or eventvwr.exe to bypass Windows User Account Control (UAC).
+version: 1
+status: enabled
+event_type: process_create
+
+level: 14
+severity: critical
+confidence: 0.95
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - field: parent.name
+      operator: in
+      value:
+        - fodhelper.exe
+        - eventvwr.exe
+        - computerdefaults.exe
+
+    - field: process.name
+      operator: in
+      value:
+        - cmd.exe
+        - powershell.exe
+        - pwsh.exe
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - parent.name
+  - process.user
+
+mitre:
+  tactic: Privilege Escalation
+  technique: T1548.002
+  name: "Abuse Elevation Control Mechanism: Bypass User Account Control"
+
+compliance:
+  - PCI-DSS_10.2.2
+  - NIST_800-53_AC-6
+  - ISO_27001_A.9.4.4
+
+tags:
+  - attack.privilege_escalation
+  - uac_bypass
+  - fodhelper

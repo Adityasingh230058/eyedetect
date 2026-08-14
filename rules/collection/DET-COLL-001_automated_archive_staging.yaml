@@ -1,0 +1,56 @@
+id: DET-COLL-001
+name: Sensitive Data Archiving and Staging for Exfiltration
+description: Detects utilities (7z, rar, zip, tar, or PowerShell Compress-Archive) compressing files into temporary folders for exfiltration staging.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 10
+severity: medium
+confidence: 0.85
+
+logic:
+  all:
+    - any:
+        - field: process.name
+          operator: in
+          value:
+            - 7z.exe
+            - 7za.exe
+            - rar.exe
+            - winrar.exe
+            - tar.exe
+        - field: process.command_line
+          operator: contains
+          value: Compress-Archive
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: .zip
+        - field: process.command_line
+          operator: contains
+          value: .7z
+        - field: process.command_line
+          operator: contains
+          value: .rar
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Collection
+  technique: T1560.001
+  name: "Archive Collected Data: Archive via Utility"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_SI-4
+
+tags:
+  - attack.collection
+  - archive_staging
+  - exfiltration_prep

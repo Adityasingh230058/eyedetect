@@ -56,6 +56,7 @@ class CorrelatedIncident:
             rule_id=self.correlation_rule_id,
             title=f"[CORRELATED INCIDENT] {self.title}",
             description=f"Multi-stage attack chain detected ({len(self.stages_matched)} correlated stages).",
+            level=16,
             severity=self.severity,
             confidence=self.confidence,
             host_id=self.host_id,

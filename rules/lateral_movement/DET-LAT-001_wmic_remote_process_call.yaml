@@ -1,0 +1,46 @@
+id: DET-LAT-001
+name: Lateral Movement via Remote WMI Process Call
+description: "Detects lateral movement attempts using wmic.exe with /node: parameter to spawn remote processes across internal networks."
+version: 1
+status: enabled
+event_type: process_create
+
+level: 13
+severity: high
+confidence: 0.90
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: wmic.exe
+
+    - field: process.command_line
+      operator: windash
+      value: node
+
+    - field: process.command_line
+      operator: contains
+      value: "process call create"
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Lateral Movement
+  technique: T1047
+  name: "Windows Management Instrumentation: Remote Process Execution"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_AC-4
+
+tags:
+  - attack.lateral_movement
+  - wmi
+  - remote_execution

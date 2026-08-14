@@ -1,0 +1,54 @@
+id: DET-INIT-001
+name: Initial Access via Suspicious ISO / VHD / LNK Execution
+description: Detects process creation directly originated from mounted disk images (.iso, .vhd) or suspicious shortcut files (.lnk) used in phishing payloads.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 11
+severity: high
+confidence: 0.90
+
+logic:
+  all:
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: .iso
+        - field: process.command_line
+          operator: contains
+          value: .vhd
+        - field: process.command_line
+          operator: contains
+          value: .lnk
+
+    - any:
+        - field: process.name
+          operator: in
+          value:
+            - powershell.exe
+            - cmd.exe
+            - mshta.exe
+            - wscript.exe
+            - cscript.exe
+            - rundll32.exe
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - parent.name
+
+mitre:
+  tactic: Initial Access
+  technique: T1204.002
+  name: "User Execution: Malicious File"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_SI-4
+
+tags:
+  - attack.initial_access
+  - phishing
+  - container_evasion

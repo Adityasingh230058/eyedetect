@@ -1,0 +1,60 @@
+id: DET-EXFIL-001
+name: Data Exfiltration via Curl or PowerShell HTTP POST
+description: Detects command-line execution of curl.exe, certutil.exe, or PowerShell sending POST uploads with file data to external IP addresses.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 13
+severity: high
+confidence: 0.90
+
+active_response: ISOLATE_HOST
+
+logic:
+  all:
+    - field: process.name
+      operator: in
+      value:
+        - curl.exe
+        - powershell.exe
+        - pwsh.exe
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: "-F "
+        - field: process.command_line
+          operator: contains
+          value: "--data-binary"
+        - field: process.command_line
+          operator: contains
+          value: "--upload-file"
+        - field: process.command_line
+          operator: contains
+          value: "Invoke-RestMethod"
+
+    - field: process.command_line
+      operator: regex
+      value: "http[s]?://"
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Exfiltration
+  technique: T1048
+  name: "Exfiltration Over Alternative Protocol: Web Service Exfiltration"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_SI-4
+  - ISO_27001_A.13.2
+
+tags:
+  - attack.exfiltration
+  - curl
+  - data_theft

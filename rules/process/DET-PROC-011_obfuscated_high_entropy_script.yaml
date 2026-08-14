@@ -11,9 +11,19 @@ confidence: 0.90
 
 logic:
   all:
+    - field: process.name
+      operator: in
+      value:
+        - powershell.exe
+        - cmd.exe
+        - mshta.exe
+        - wscript.exe
+        - cscript.exe
+        - pwsh.exe
+
     - field: process.command_line
       operator: entropy_greater_than
-      value: 4.0
+      value: 4.3
 
 evidence:
   - process.name

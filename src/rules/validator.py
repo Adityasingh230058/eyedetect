@@ -19,6 +19,8 @@ VALID_OPERATORS = {
     "has_ancestor",
     "in_threat_intel",
     "entropy_greater_than",
+    "cidr",
+    "windash",
 }
 
 
