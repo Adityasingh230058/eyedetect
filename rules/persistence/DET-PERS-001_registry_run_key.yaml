@@ -1,0 +1,31 @@
+id: DET-PERS-001
+name: Persistence via Registry Run or RunOnce Key Modification
+description: Detects process modifying or writing to Windows Run or RunOnce registry keys to establish persistent startup execution.
+version: 1
+status: enabled
+event_type: registry_write
+
+logic:
+  all:
+    - field: registry.key_path
+      operator: contains
+      value: "CurrentVersion\\Run"
+
+severity: high
+confidence: 0.85
+
+evidence:
+  - registry.key_path
+  - registry.value_name
+  - registry.value_data
+  - process.name
+  - process.pid
+
+mitre:
+  tactic: Persistence
+  technique: T1547.001
+  name: "Boot or Logon Autostart Execution: Registry Run Keys"
+
+tags:
+  - attack.persistence
+  - registry

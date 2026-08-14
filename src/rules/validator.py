@@ -16,6 +16,7 @@ VALID_OPERATORS = {
     "regex",
     "greater_than",
     "less_than",
+    "has_ancestor",
 }
 
 

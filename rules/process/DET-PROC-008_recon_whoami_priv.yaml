@@ -1,0 +1,42 @@
+id: DET-PROC-008
+name: System Privileges and Account Discovery via Whoami
+description: Detects post-exploitation discovery of user privileges and group memberships via whoami.exe.
+version: 1
+status: enabled
+event_type: process_create
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: whoami.exe
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: /priv
+        - field: process.command_line
+          operator: contains
+          value: /all
+        - field: process.command_line
+          operator: contains
+          value: /groups
+
+severity: medium
+confidence: 0.80
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - parent.name
+
+mitre:
+  tactic: Discovery
+  technique: T1033
+  name: "System Owner/User Discovery"
+
+tags:
+  - attack.discovery
+  - reconnaissance
+  - whoami

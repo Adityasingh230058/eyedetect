@@ -1,0 +1,42 @@
+id: DET-PROC-003
+name: LOLBAS Certutil Suspicious File Download
+description: Detects the use of certutil.exe with -urlcache or -split parameters to download remote files from the internet.
+version: 1
+status: enabled
+event_type: process_create
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: certutil.exe
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: -urlcache
+        - field: process.command_line
+          operator: contains
+          value: -split
+        - field: process.command_line
+          operator: regex
+          value: "http[s]?://"
+
+severity: high
+confidence: 0.90
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Ingress Tool Transfer
+  technique: T1105
+  name: "Ingress Tool Transfer: Certutil"
+
+tags:
+  - attack.command_and_control
+  - lolbas
+  - certutil

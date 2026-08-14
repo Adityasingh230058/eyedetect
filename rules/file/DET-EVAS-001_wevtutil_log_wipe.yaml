@@ -1,0 +1,39 @@
+id: DET-EVAS-001
+name: Windows Security Event Log Cleared via Wevtutil
+description: Detects defense evasion activity attempting to clear Windows Event Logs using wevtutil.exe.
+version: 1
+status: enabled
+event_type: process_create
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: wevtutil.exe
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: " cl "
+        - field: process.command_line
+          operator: contains
+          value: "clear-log"
+
+severity: high
+confidence: 0.95
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Defense Evasion
+  technique: T1070.001
+  name: "Indicator Removal on Host: Clear Windows Event Logs"
+
+tags:
+  - attack.defense_evasion
+  - wevtutil
+  - log_clearing

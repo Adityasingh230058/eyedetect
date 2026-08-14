@@ -1,0 +1,39 @@
+id: DET-PROC-002
+name: Microsoft Office Spawns Command Prompt
+description: Detects Microsoft Office applications launching cmd.exe, a common initial access payload technique.
+version: 1
+status: enabled
+event_type: process_create
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: cmd.exe
+
+    - field: parent.name
+      operator: in
+      value:
+        - winword.exe
+        - excel.exe
+        - powerpnt.exe
+        - outlook.exe
+
+severity: high
+confidence: 0.85
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - parent.name
+
+mitre:
+  tactic: Execution
+  technique: T1059.003
+  name: "Command and Scripting Interpreter: Windows Command Shell"
+
+tags:
+  - attack.execution
+  - office
+  - lolbas

@@ -1,0 +1,39 @@
+id: DET-PROC-005
+name: LSASS Memory Dump Attempt via Rundll32
+description: Detects credential dumping attempts using rundll32.exe calling comsvcs.dll MiniDump to dump LSASS memory.
+version: 1
+status: enabled
+event_type: process_create
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: rundll32.exe
+
+    - field: process.command_line
+      operator: contains
+      value: comsvcs.dll
+
+    - field: process.command_line
+      operator: contains
+      value: MiniDump
+
+severity: critical
+confidence: 0.98
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Credential Access
+  technique: T1003.001
+  name: "OS Credential Dumping: LSASS Memory"
+
+tags:
+  - attack.credential_access
+  - lsass
+  - minidump

@@ -1,0 +1,34 @@
+id: DET-PERS-002
+name: Scheduled Task Creation via Schtasks Utility
+description: Detects scheduled task registration using schtasks.exe with /create parameter for persistence or execution.
+version: 1
+status: enabled
+event_type: process_create
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: schtasks.exe
+
+    - field: process.command_line
+      operator: contains
+      value: /create
+
+severity: medium
+confidence: 0.80
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - parent.name
+
+mitre:
+  tactic: Persistence
+  technique: T1053.005
+  name: "Scheduled Task/Job: Scheduled Task"
+
+tags:
+  - attack.persistence
+  - schtasks

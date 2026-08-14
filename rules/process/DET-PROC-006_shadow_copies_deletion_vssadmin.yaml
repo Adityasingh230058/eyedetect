@@ -1,0 +1,39 @@
+id: DET-PROC-006
+name: Volume Shadow Copies Deletion via Vssadmin
+description: Detects ransomware activity attempting to delete Volume Shadow Copies to inhibit system recovery.
+version: 1
+status: enabled
+event_type: process_create
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: vssadmin.exe
+
+    - field: process.command_line
+      operator: contains
+      value: delete
+
+    - field: process.command_line
+      operator: contains
+      value: shadows
+
+severity: critical
+confidence: 0.95
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - parent.name
+
+mitre:
+  tactic: Impact
+  technique: T1490
+  name: "Inhibit System Recovery: Delete Volume Shadow Copies"
+
+tags:
+  - attack.impact
+  - ransomware
+  - vssadmin

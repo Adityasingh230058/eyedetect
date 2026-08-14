@@ -1,0 +1,38 @@
+id: DET-EVAS-002
+name: Windows Defender Real-Time Protection Disabled
+description: Detects PowerShell command attempting to disable Microsoft Defender Antivirus real-time monitoring.
+version: 1
+status: enabled
+event_type: process_create
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: powershell.exe
+
+    - field: process.command_line
+      operator: contains
+      value: Set-MpPreference
+
+    - field: process.command_line
+      operator: contains
+      value: DisableRealtimeMonitoring
+
+severity: critical
+confidence: 0.95
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Defense Evasion
+  technique: T1562.001
+  name: "Impair Defenses: Disable or Modify Tools"
+
+tags:
+  - attack.defense_evasion
+  - defender

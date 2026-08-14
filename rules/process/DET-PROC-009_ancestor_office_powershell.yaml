@@ -1,0 +1,39 @@
+id: DET-PROC-009
+name: Multi-Level Process Ancestry - Office Ancestor Launches PowerShell
+description: Detects PowerShell launched by any child or grandchild process whose root ancestor is Microsoft Office.
+version: 1
+status: enabled
+event_type: process_create
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: powershell.exe
+
+    - field: process.process_guid
+      operator: has_ancestor
+      value:
+        - winword.exe
+        - excel.exe
+        - powerpnt.exe
+
+severity: high
+confidence: 0.95
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.process_guid
+  - process.lineage
+
+mitre:
+  tactic: Execution
+  technique: T1059.001
+  name: "Command and Scripting Interpreter: PowerShell Ancestry"
+
+tags:
+  - attack.execution
+  - process_tree
+  - ancestry
