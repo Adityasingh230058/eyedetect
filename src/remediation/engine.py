@@ -158,6 +158,76 @@ class EndpointRemediationEngine:
         self.action_history.append(action)
         return action
 
+    def remediate_identity_threat(
+        self,
+        match: Any,  # IdentityThreatMatch
+    ) -> RemediationReport:
+        """Executes automated identity threat remediation (Account Lockout, Token Revocation, Password Reset)."""
+        actions: List[RemediationAction] = []
+        incident_id = f"REM-ID-{len(self.action_history) + 1:04d}"
+
+        if match.remediation_required == "LOCK_USER_ACCOUNT":
+            act_id = f"ACT-LOCK-{match.username}"
+            act = RemediationAction(
+                action_id=act_id,
+                action_type="LOCK_USER_ACCOUNT",
+                target_entity=f"User '{match.username}'",
+                host_id=match.host_id,
+                rule_id="DET-IDENT-001",
+                status="SUCCESS" if not self.dry_run else "SIMULATED",
+                details={
+                    "remediation_action": "Disabled active account in Active Directory / SAM",
+                    "reason": match.threat_type,
+                    "target_account": match.username,
+                },
+            )
+            actions.append(act)
+            self.action_history.append(act)
+
+        elif match.remediation_required == "REVOKE_USER_SESSIONS":
+            act_id = f"ACT-REVOKE-{match.username}"
+            act = RemediationAction(
+                action_id=act_id,
+                action_type="REVOKE_USER_SESSIONS",
+                target_entity=f"User '{match.username}'",
+                host_id=match.host_id,
+                rule_id="DET-IDENT-003",
+                status="SUCCESS" if not self.dry_run else "SIMULATED",
+                details={
+                    "remediation_action": "Invalidated all active Kerberos TGTs and OAuth/SAML tokens",
+                    "reason": match.threat_type,
+                    "target_account": match.username,
+                },
+            )
+            actions.append(act)
+            self.action_history.append(act)
+
+        elif match.remediation_required == "FORCE_PASSWORD_RESET":
+            act_id = f"ACT-PWDRESET-{match.username}"
+            act = RemediationAction(
+                action_id=act_id,
+                action_type="FORCE_PASSWORD_RESET",
+                target_entity=f"User '{match.username}'",
+                host_id=match.host_id,
+                rule_id="DET-IDENT-002",
+                status="SUCCESS" if not self.dry_run else "SIMULATED",
+                details={
+                    "remediation_action": "Set UserMustChangePasswordOnNextLogon = True",
+                    "reason": match.threat_type,
+                    "target_account": match.username,
+                },
+            )
+            actions.append(act)
+            self.action_history.append(act)
+
+        return RemediationReport(
+            incident_id=incident_id,
+            host_id=match.host_id,
+            threat_name=match.threat_type,
+            actions_executed=actions,
+            containment_status="FULLY_CONTAINED" if actions else "MONITORING",
+        )
+
     def _isolate_host_network(self, host_id: str, rule_id: str, reason: str) -> RemediationAction:
         act_id = f"ACT-ISO-{host_id}"
         action = RemediationAction(

@@ -3,8 +3,9 @@
 Orchestrates Wazuh-grade detection rules (Levels 0-16), Threat Intelligence IOC matching,
 MITRE ATT&CK Matrix Navigator, stateful process tree tracking, inline payload deobfuscation,
 Shannon Entropy analysis, C2 Beaconing Jitter Analysis, Lateral Port Scan Tracking,
-DGA & DNS Tunneling Analysis, Ransomware Canary Shield, Endpoint Threat Remediation & Auto-Fixing,
-frequency thresholding, multi-event correlation, Entity Risk Scoring (0-100), and Active Response.
+DGA & DNS Tunneling Analysis, Ransomware Canary Shield, ITDR & Identity Threat / UEBA Analytics,
+Endpoint Threat Remediation & Auto-Fixing, frequency thresholding, multi-event correlation,
+Entity Risk Scoring (0-100), and Active Response.
 """
 
 import argparse
@@ -32,6 +33,7 @@ from src.correlation.process_tree import ProcessTree
 from src.correlation.risk_scorer import EntityRiskScorer
 from src.evaluator.engine import RuleEvaluator
 from src.evaluator.threshold import ThresholdEngine
+from src.identity.ueba import IdentityAnalyticsEngine
 from src.ingestion.event_reader import EventReader
 from src.mitre.attack import MitreMatrixNavigator
 from src.network.beacon_detector import C2BeaconDetector
@@ -44,7 +46,7 @@ from src.threat_intel.ioc_lookup import ThreatIntelEngine
 
 def main():
     parser = argparse.ArgumentParser(
-        description="eyedetect - Elite EDR/NDR Detection, Remediation & System Auto-Fixing Engine",
+        description="eyedetect - Elite EDR/NDR/ITDR Detection, Remediation & System Auto-Fixing Engine",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -86,7 +88,7 @@ def main():
         "--auto-remediate",
         action="store_true",
         default=True,
-        help="Execute automated threat remediation, process killing, file quarantine, and persistence reversal",
+        help="Execute automated threat remediation, process killing, file quarantine, persistence reversal, and account lockouts",
     )
 
     args = parser.parse_args()
@@ -123,7 +125,7 @@ def main():
         print(f"[+] Exported MITRE ATT&CK Navigator Layer to: {out_layer_path.resolve()}")
 
     print("=" * 70)
-    print("[*] eyedetect - Elite EDR/NDR Detection & Remediation Engine")
+    print("[*] eyedetect - Elite EDR/NDR/ITDR Detection & Remediation Engine")
     print("=" * 70)
 
     print(f"[*] Loaded and validated {len(rules)} active detection rule(s):")
@@ -140,12 +142,14 @@ def main():
     beacon_detector = C2BeaconDetector(min_samples=4, max_cv_threshold=0.22)
     port_scan_detector = PortScanDetector(horizontal_ip_threshold=5, vertical_port_threshold=6)
     ransomware_shield = RansomwareShield(burst_threshold=4, burst_window_seconds=5.0)
+    identity_engine = IdentityAnalyticsEngine(brute_force_threshold=5, spray_account_threshold=4)
     remediation_engine = EndpointRemediationEngine(dry_run=False)
 
     print(f"\n[*] Loaded Threat Intelligence Engine with high-confidence IOC hash/IP feeds.")
     print(f"[*] Initialized Inline Command-Line Deobfuscator & Shannon Entropy Analyzer.")
     print(f"[*] Initialized Ransomware Shield & Decoy Canary Tripwire Protection.")
-    print(f"[*] Initialized Endpoint Remediation Engine (Process Tree Killing, File Quarantine, Persistence Reversal).")
+    print(f"[*] Initialized ITDR Identity Threat Engine & UEBA Behavioral Analytics.")
+    print(f"[*] Initialized Endpoint & Identity Remediation Engine (Account Lockout, Token Revocation).")
     print(f"[*] Initialized DGA Domain & DNS Tunneling Exfiltration Analyzers.")
     print(f"[*] Initialized C2 Beaconing Periodic Heartbeat & Jitter Engine (CV <= 0.22).")
     print(f"[*] Initialized Lateral Port Scanner & Subnet Reconnaissance Tracker.")
@@ -168,6 +172,7 @@ def main():
     beacon_alerts_count = 0
     port_scan_alerts_count = 0
     ransomware_shield_alerts = 0
+    identity_threat_alerts = 0
     incident_alerts_count = 0
     risk_breach_alerts_count = 0
     active_responses_count = 0
@@ -225,7 +230,37 @@ def main():
                 all_generated_alerts.append(inc_alert)
                 _print_alert(inc_alert, args.output_format)
 
-        # B. Evaluate Ransomware Shield & Canary Tripwires
+        # B. Evaluate ITDR & Identity Analytics Engine (UEBA)
+        id_matches = identity_engine.ingest_identity_event(event)
+        for idm in id_matches:
+            identity_threat_alerts += 1
+            id_alert = Alert(
+                alert_id=f"ALT-ID-{events_count}",
+                rule_id="DET-IDENT-001",
+                title=f"[IDENTITY THREAT] {idm.threat_type}",
+                description=f"Compromised identity indicator detected for user '{idm.username}'.",
+                level=14,
+                severity="critical",
+                confidence=idm.confidence,
+                host_id=idm.host_id,
+                timestamp=ts,
+                event_id=event.get("event_id"),
+                evidence=idm.evidence,
+                active_response={"action": idm.remediation_required, "target_user": idm.username},
+                mitre_tactic="Credential Access",
+                mitre_technique="T1110",
+                tags=["attack.credential_access", "attack.initial_access", "identity_threat", "ueba"],
+            )
+            all_generated_alerts.append(id_alert)
+            _print_alert(id_alert, args.output_format)
+
+            if args.auto_remediate:
+                rem_report = remediation_engine.remediate_identity_threat(idm)
+                if rem_report.actions_executed:
+                    remediations_executed += len(rem_report.actions_executed)
+                    _print_remediation(rem_report)
+
+        # C. Evaluate Ransomware Shield & Canary Tripwires
         canary_match = ransomware_shield.inspect_file_event(event)
         if canary_match:
             ransomware_shield_alerts += 1
@@ -260,7 +295,7 @@ def main():
                     remediations_executed += len(rem_report.actions_executed)
                     _print_remediation(rem_report)
 
-        # C. Evaluate C2 Beaconing Periodic Engine
+        # D. Evaluate C2 Beaconing Periodic Engine
         beacon_match = beacon_detector.ingest_connection(event)
         if beacon_match:
             beacon_alerts_count += 1
@@ -293,7 +328,7 @@ def main():
             all_generated_alerts.append(beacon_alert)
             _print_alert(beacon_alert, args.output_format)
 
-        # D. Evaluate Lateral Port Scanner & Subnet Sweeper
+        # E. Evaluate Lateral Port Scanner & Subnet Sweeper
         scan_matches = port_scan_detector.ingest_connection(event)
         for sm in scan_matches:
             port_scan_alerts_count += 1
@@ -317,7 +352,7 @@ def main():
             all_generated_alerts.append(scan_alert)
             _print_alert(scan_alert, args.output_format)
 
-        # E. Evaluate Frequency & Threshold Rules
+        # F. Evaluate Frequency & Threshold Rules
         thresh_matches = threshold_engine.ingest_event(event)
         for tm in thresh_matches:
             threshold_alerts_count += 1
@@ -363,6 +398,7 @@ def main():
     print("[+] Elite Evaluation & Incident Summary:")
     print(f"   • Total Telemetry Events Processed : {events_count}")
     print(f"   • Atomic Threat Detections         : {atomic_alerts_count}")
+    print(f"   • Identity & UEBA Threat Detections: {identity_threat_alerts}")
     print(f"   • Ransomware Shield Tripwires Fired: {ransomware_shield_alerts}")
     print(f"   • C2 Beaconing Periodic Detections : {beacon_alerts_count}")
     print(f"   • Network Port Scans / Sweeps      : {port_scan_alerts_count}")
