@@ -17,6 +17,7 @@ VALID_OPERATORS = {
     "greater_than",
     "less_than",
     "has_ancestor",
+    "in_threat_intel",
 }
 
 

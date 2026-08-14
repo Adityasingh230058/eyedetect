@@ -1,10 +1,11 @@
-"""Evaluation engine orchestrating rule logic matching and evidence generation."""
+"""Evaluation engine orchestrating rule logic matching, threat intel lookups, and rule inheritance."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 from src.rules.schema import Condition, LogicNode, Rule
 from src.evaluator.matcher import ConditionMatcher, extract_field
 from src.correlation.process_tree import ProcessTree
+from src.threat_intel.ioc_lookup import ThreatIntelEngine
 
 
 @dataclass
@@ -18,10 +19,18 @@ class DetectionResult:
 class RuleEvaluator:
     """Evaluates telemetry events against active detection rules."""
 
-    def __init__(self, rules: List[Rule] = None, process_tree: Optional[ProcessTree] = None):
+    def __init__(
+        self,
+        rules: List[Rule] = None,
+        process_tree: Optional[ProcessTree] = None,
+        threat_intel: Optional[ThreatIntelEngine] = None,
+    ):
         self.rules = rules or []
         self.process_tree = process_tree
+        self.threat_intel = threat_intel or ThreatIntelEngine()
         self._rules_by_type: Dict[str, List[Rule]] = {}
+        # Tracks matched rule IDs per host for `depends_on_rule` (Wazuh <if_sid>)
+        self._matched_rules_history: Dict[str, Set[str]] = {}
         self.set_rules(self.rules)
 
     def set_rules(self, rules: List[Rule]) -> None:
@@ -40,13 +49,22 @@ class RuleEvaluator:
         if not event_type:
             return []
 
+        host_id = event.get("host_id", "UNKNOWN_HOST")
         candidate_rules = self._rules_by_type.get(event_type, [])
         matches: List[DetectionResult] = []
 
         for rule in candidate_rules:
+            # 1. Rule Inheritance Check (Wazuh <if_sid>)
+            if rule.depends_on_rule:
+                host_history = self._matched_rules_history.get(host_id, set())
+                if rule.depends_on_rule not in host_history:
+                    continue  # Parent rule hasn't triggered yet!
+
+            # 2. Logic condition check
             if self._evaluate_logic_node(rule.logic, event):
                 evidence = self._extract_evidence(rule, event)
                 matches.append(DetectionResult(rule=rule, event=event, matched_evidence=evidence))
+                self._matched_rules_history.setdefault(host_id, set()).add(rule.id)
 
         return matches
 
@@ -56,7 +74,9 @@ class RuleEvaluator:
         if node.all is not None:
             for item in node.all:
                 if isinstance(item, Condition):
-                    if not ConditionMatcher.evaluate(item, event, process_tree=self.process_tree):
+                    if not ConditionMatcher.evaluate(
+                        item, event, process_tree=self.process_tree, threat_intel=self.threat_intel
+                    ):
                         return False
                 elif isinstance(item, LogicNode):
                     if not self._evaluate_logic_node(item, event):
@@ -67,7 +87,9 @@ class RuleEvaluator:
             any_matched = False
             for item in node.any:
                 if isinstance(item, Condition):
-                    if ConditionMatcher.evaluate(item, event, process_tree=self.process_tree):
+                    if ConditionMatcher.evaluate(
+                        item, event, process_tree=self.process_tree, threat_intel=self.threat_intel
+                    ):
                         any_matched = True
                         break
                 elif isinstance(item, LogicNode):
@@ -81,7 +103,9 @@ class RuleEvaluator:
         if node.none is not None:
             for item in node.none:
                 if isinstance(item, Condition):
-                    if ConditionMatcher.evaluate(item, event, process_tree=self.process_tree):
+                    if ConditionMatcher.evaluate(
+                        item, event, process_tree=self.process_tree, threat_intel=self.threat_intel
+                    ):
                         return False
                 elif isinstance(item, LogicNode):
                     if self._evaluate_logic_node(item, event):
@@ -93,7 +117,9 @@ class RuleEvaluator:
         """Extracts specified evidence fields from the event or dynamic process tree."""
         evidence_dict: Dict[str, Any] = {}
         for field_path in rule.evidence:
-            val = extract_field(event, field_path, process_tree=self.process_tree)
+            val = extract_field(
+                event, field_path, process_tree=self.process_tree, threat_intel=self.threat_intel
+            )
             if val is not None:
                 evidence_dict[field_path] = val
         return evidence_dict

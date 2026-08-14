@@ -1,0 +1,40 @@
+id: DET-PROC-010
+name: Known Malicious Binary Execution via Threat Intelligence IOC Hash Match
+description: Detects execution of a binary whose SHA256 hash matches high-confidence Threat Intel malware blacklists (e.g. Mimikatz, Cobalt Strike, WannaCry).
+version: 1
+status: enabled
+event_type: process_create
+
+level: 15
+severity: critical
+confidence: 0.99
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - field: process.file_hash
+      operator: in_threat_intel
+      value: hash
+
+evidence:
+  - process.name
+  - process.file_hash
+  - process.pid
+  - process.user
+  - threat_intel.hash_match
+
+mitre:
+  tactic: Credential Access
+  technique: T1003.001
+  name: "OS Credential Dumping: Threat Intel Hash Match"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_SI-4
+  - ISO_27001_A.12.2
+
+tags:
+  - attack.credential_access
+  - threat_intel
+  - ioc_match

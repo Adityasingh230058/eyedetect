@@ -1,4 +1,8 @@
-"""Data models and schema definitions for detection rules."""
+"""Data models and schema definitions for detection rules.
+
+Incorporates Wazuh-grade 0-16 Alert Levels, Rule Inheritance (depends_on_rule),
+Active Response actions, and Compliance framework mappings.
+"""
 
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
@@ -49,10 +53,21 @@ class Rule(BaseModel):
     status: RuleStatus = RuleStatus.ENABLED
     event_type: str
     logic: LogicNode
+    
+    # Wazuh-grade Level (0 to 16)
+    level: int = Field(default=7, ge=0, le=16)
     severity: SeverityLevel = SeverityLevel.MEDIUM
-    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    confidence: float = Field(default=0.85, ge=0.0, le=1.0)
+    
+    # Rule Inheritance (Wazuh <if_sid>)
+    depends_on_rule: Optional[str] = None
+    
+    # Automated Active Response
+    active_response: Optional[str] = None
+    
     evidence: List[str] = Field(default_factory=list)
     mitre: Optional[MitreMapping] = None
+    compliance: List[str] = Field(default_factory=list)  # e.g., ["PCI-DSS_10.6", "NIST_800-53_SI-4"]
     tags: List[str] = Field(default_factory=list)
 
     class Config:

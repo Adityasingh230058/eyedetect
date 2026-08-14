@@ -1,10 +1,11 @@
-"""Alert definitions and data structures."""
+"""Alert definitions and data structures with Wazuh 0-16 levels and Active Response."""
 
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from src.evaluator.engine import DetectionResult
+from src.alerting.active_response import ActiveResponseAction, ActiveResponseEngine
 
 
 @dataclass
@@ -14,14 +15,17 @@ class Alert:
     rule_id: str
     title: str
     description: str
+    level: int  # Wazuh 0-16 Level
     severity: str
     confidence: float
     host_id: str
     timestamp: str
     event_id: Optional[str]
     evidence: Dict[str, Any]
+    active_response: Optional[Dict[str, Any]] = None
     mitre_tactic: Optional[str] = None
     mitre_technique: Optional[str] = None
+    compliance: List[str] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
 
     @classmethod
@@ -32,19 +36,30 @@ class Alert:
         mitre_tactic = rule.mitre.tactic if rule.mitre else None
         mitre_technique = rule.mitre.technique if rule.mitre else None
 
+        # Resolve automated Active Response action
+        ar_action = ActiveResponseEngine.resolve_action(
+            level=rule.level,
+            event=event,
+            custom_action=rule.active_response,
+            reason=f"Rule [{rule.id}] triggered at Level {rule.level}",
+        )
+
         return cls(
             alert_id=f"ALT-{uuid.uuid4().hex[:8].upper()}",
             rule_id=rule.id,
             title=rule.name,
             description=rule.description,
+            level=rule.level,
             severity=rule.severity.value if hasattr(rule.severity, "value") else str(rule.severity),
             confidence=rule.confidence,
             host_id=event.get("host_id", "UNKNOWN_HOST"),
             timestamp=event.get("timestamp", datetime.utcnow().isoformat() + "Z"),
             event_id=event.get("event_id"),
             evidence=result.matched_evidence,
+            active_response=ar_action.to_dict() if ar_action else None,
             mitre_tactic=mitre_tactic,
             mitre_technique=mitre_technique,
+            compliance=rule.compliance,
             tags=rule.tags,
         )
 
