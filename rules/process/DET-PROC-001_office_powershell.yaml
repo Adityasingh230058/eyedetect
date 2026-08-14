@@ -1,0 +1,48 @@
+id: DET-PROC-001
+name: Microsoft Office Spawns PowerShell
+description: Detects suspicious PowerShell execution spawned by Microsoft Office applications with encoded commands.
+version: 1
+status: enabled
+event_type: process_create
+
+logic:
+  all:
+    - field: process.name
+      operator: equals
+      value: powershell.exe
+
+    - field: parent.name
+      operator: in
+      value:
+        - winword.exe
+        - excel.exe
+        - powerpnt.exe
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: -encodedcommand
+        - field: process.command_line
+          operator: contains
+          value: -enc
+
+severity: high
+confidence: 0.90
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.process_guid
+  - parent.name
+  - parent.pid
+
+mitre:
+  tactic: Execution
+  technique: T1059.001
+  name: "Command and Scripting Interpreter: PowerShell"
+
+tags:
+  - attack.execution
+  - office
+  - lolbas
