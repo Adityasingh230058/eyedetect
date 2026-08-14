@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eyedetect — Threat Hunting Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js for high-fidelity Wazuh-style charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Top Navigation Header -->
+    <header class="top-nav">
+        <div class="nav-left">
+            <button class="menu-btn" title="Navigation">☰</button>
+            <div class="logo">
+                <span class="logo-text"><strong>eyedetect</strong><span class="dot">.</span></span>
+            </div>
+            <div class="breadcrumb-pill">Threat Hunting</div>
+        </div>
+
+        <div class="nav-center">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search alerts, hosts, techniques, descriptions...">
+            </div>
+            <div class="date-picker-box">
+                <span class="cal-icon">📅</span>
+                <span>Active Telemetry Session</span>
+                <span class="arrow-down">▼</span>
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <button class="nav-action-btn" onclick="filterByTactic('')">📡 Explore Agents</button>
+            <button class="nav-action-btn primary" onclick="exportReport()">📄 Export Alerts</button>
+            <div class="live-dot" title="Engine Connected"></div>
+        </div>
+    </header>
+
+    <!-- Subheader Tabs -->
+    <div class="sub-nav">
+        <div class="tab-list">
+            <button class="tab-item active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="tab-item" onclick="switchTab('events')">Events (<span id="eventCountBadge">0</span>)</button>
+            <button class="tab-item" onclick="switchTab('mitre')">MITRE ATT&CK Matrix</button>
+        </div>
+    </div>
+
+    <!-- Main Dashboard View -->
+    <main class="content-container" id="dashboardTab">
+        <!-- 4 Top KPI Cards (Identical to Wazuh) -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Total Events Analyzed</div>
+                <div class="kpi-value blue" id="totalEventsVal">24</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Level 12 or Above Alerts</div>
+                <div class="kpi-value red" id="criticalAlertsVal">21</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Authentication & Identity Threats</div>
+                <div class="kpi-value orange" id="authFailuresVal">4</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Automated Defenses Executed</div>
+                <div class="kpi-value green" id="autoFixesVal">16</div>
+            </div>
+        </div>
+
+        <!-- Row 1 Charts: Evolution & MITRE -->
+        <div class="chart-row two-col">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Alerts level evolution</h3>
+                    <span class="timestamp-badge">timestamp per event</span>
+                </div>
+                <div class="chart-body">
+                    <canvas id="alertLevelEvolutionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>MITRE ATT&CK Tactics Breakdown</h3>
+                </div>
+                <div class="chart-body donut-body">
+                    <canvas id="mitreDonutChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2 Charts: Top Agents & Evolution per Agent -->
+        <div class="chart-row two-col">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Top 5 Monitored Agents / Assets</h3>
+                </div>
+                <div class="chart-body donut-body">
+                    <canvas id="topAgentsDonutChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Alerts evolution - Top assets</h3>
+                    <span class="timestamp-badge">threat accumulation</span>
+                </div>
+                <div class="chart-body">
+                    <canvas id="agentEvolutionBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Table: Security Alerts Grid -->
+        <div class="table-card">
+            <div class="table-header">
+                <h3>Security alerts</h3>
+                <div class="table-controls">
+                    <select id="levelFilter" onchange="applyFilters()">
+                        <option value="all">All Levels (0 - 16)</option>
+                        <option value="12">Level 12+ (Critical / High)</option>
+                        <option value="15">Level 15+ (Critical)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="alerts-table">
+                    <thead>
+                        <tr>
+                            <th>Time ▾</th>
+                            <th>Host / Agent</th>
+                            <th>Platform / OS</th>
+                            <th>Technique(s)</th>
+                            <th>Tactic(s)</th>
+                            <th>Description</th>
+                            <th>Level</th>
+                            <th>Rule ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertsTableBody">
+                        <!-- Populated dynamically via app.js -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for Detailed Event Forensic Inspection -->
+    <div id="eventModal" class="modal-backdrop" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTitle">Security Alert Details</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Forensic Details -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
