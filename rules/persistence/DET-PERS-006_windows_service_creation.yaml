@@ -1,0 +1,49 @@
+id: DET-PERS-006
+name: Windows Service Installation or Modification via SC Utility
+description: Detects the creation of new Windows services via sc.exe ('sc create' / 'sc config') or PowerShell New-Service to establish autostart persistence.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 12
+severity: high
+confidence: 0.90
+
+logic:
+  all:
+    - field: process.name
+      operator: in
+      value:
+        - sc.exe
+        - sc
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: create
+        - field: process.command_line
+          operator: contains
+          value: config
+        - field: process.command_line
+          operator: contains
+          value: binPath
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Persistence
+  technique: T1543.003
+  name: "Create or Modify System Process: Windows Service"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_SI-4
+
+tags:
+  - attack.persistence
+  - windows_service
+  - sc_create

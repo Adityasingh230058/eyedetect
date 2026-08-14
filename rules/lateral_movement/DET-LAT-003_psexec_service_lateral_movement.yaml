@@ -1,0 +1,48 @@
+id: DET-LAT-003
+name: Lateral Movement via PsExec Remote Service Execution
+description: Detects the execution of PsExec.exe, PaExec.exe, or the creation of the PSEXESVC remote service across internal hosts.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 13
+severity: high
+confidence: 0.94
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  any:
+    - field: process.name
+      operator: in
+      value:
+        - psexec.exe
+        - psexec64.exe
+        - paexec.exe
+        - psexesvc.exe
+    - field: process.command_line
+      operator: contains
+      value: "psexesvc"
+    - field: process.command_line
+      operator: contains
+      value: "-accepteula"
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Lateral Movement
+  technique: T1570
+  name: "Lateral Tool Transfer: PsExec Service Execution"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_AC-4
+
+tags:
+  - attack.lateral_movement
+  - psexec
+  - remote_execution

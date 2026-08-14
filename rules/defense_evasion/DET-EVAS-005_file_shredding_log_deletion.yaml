@@ -1,0 +1,60 @@
+id: DET-EVAS-005
+name: File and Security Log Shredding or Anti-Forensic Overwrite
+description: Detects command-line execution of secure file wipe utilities (sdelete.exe, cipher.exe /w, shred, srm) to permanently destroy forensic artifacts.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 13
+severity: high
+confidence: 0.92
+
+logic:
+  all:
+    - any:
+        - field: process.name
+          operator: in
+          value:
+            - sdelete.exe
+            - sdelete
+            - cipher.exe
+            - shred
+            - wipe
+        - field: process.command_line
+          operator: contains
+          value: sdelete
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: "/w:"
+        - field: process.command_line
+          operator: contains
+          value: "-z"
+        - field: process.command_line
+          operator: contains
+          value: "-p"
+        - field: process.command_line
+          operator: contains
+          value: "-u"
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Defense Evasion
+  technique: T1070.004
+  name: "Indicator Removal on Host: File Deletion - Secure Shredding"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_SI-4
+
+tags:
+  - attack.defense_evasion
+  - sdelete
+  - anti_forensics
+  - file_shredding
