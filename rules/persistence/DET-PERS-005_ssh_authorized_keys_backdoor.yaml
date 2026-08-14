@@ -1,0 +1,50 @@
+id: DET-PERS-005
+name: Linux SSH Authorized Keys Backdoor Persistence
+description: Detects command-line appending or writing of public keys into ~/.ssh/authorized_keys to establish persistent root/user SSH access.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 13
+severity: high
+confidence: 0.92
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - field: process.command_line
+      operator: contains
+      value: "authorized_keys"
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: "ssh-rsa"
+        - field: process.command_line
+          operator: contains
+          value: "ssh-ed25519"
+        - field: process.command_line
+          operator: contains
+          value: ">>"
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Persistence
+  technique: T1098.004
+  name: "Account Manipulation: SSH Authorized Keys"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_AC-2
+
+tags:
+  - attack.persistence
+  - ssh
+  - authorized_keys
+  - linux

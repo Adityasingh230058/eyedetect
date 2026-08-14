@@ -1,0 +1,58 @@
+id: DET-CRED-002
+name: NTDS.dit Active Directory Database Extraction Attempt
+description: Detects command-line execution of ntdsutil.exe ('ac i ntds' / 'ifm'), esentutl.exe, or Volume Shadow Copy extraction targeting the Active Directory database file ntds.dit.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 16
+severity: critical
+confidence: 0.98
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - any:
+        - field: process.name
+          operator: in
+          value:
+            - ntdsutil.exe
+            - esentutl.exe
+            - vssadmin.exe
+            - wmic.exe
+        - field: process.command_line
+          operator: contains
+          value: "ntds.dit"
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: "ntds.dit"
+        - field: process.command_line
+          operator: contains
+          value: "ifm"
+        - field: process.command_line
+          operator: contains
+          value: "create full"
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Credential Access
+  technique: T1003.003
+  name: "OS Credential Dumping: NTDS"
+
+compliance:
+  - PCI-DSS_10.2.1
+  - NIST_800-53_IA-5
+
+tags:
+  - attack.credential_access
+  - ntds_dit
+  - active_directory
+  - credential_dumping

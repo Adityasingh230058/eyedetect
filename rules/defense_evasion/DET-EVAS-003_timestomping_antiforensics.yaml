@@ -1,0 +1,47 @@
+id: DET-EVAS-003
+name: Timestomping File Timestamp Anti-Forensics Modification
+description: Detects command-line or programmatic modification of file creation/modification timestamps (Set-ItemProperty LastWriteTime / powershell timestamping) to evade forensic timeline analysis.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 11
+severity: medium
+confidence: 0.88
+
+logic:
+  all:
+    - field: process.command_line
+      operator: contains
+      value: LastWriteTime
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: CreationTime
+        - field: process.command_line
+          operator: contains
+          value: LastAccessTime
+        - field: process.command_line
+          operator: contains
+          value: Set-ItemProperty
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Defense Evasion
+  technique: T1070.006
+  name: "Indicator Removal on Host: Timestomp"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_SI-4
+
+tags:
+  - attack.defense_evasion
+  - timestomp
+  - anti_forensics

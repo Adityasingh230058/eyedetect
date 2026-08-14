@@ -1,0 +1,48 @@
+id: DET-PROC-014
+name: DLL Side-Loading or Search-Order Hijacking
+description: Detects legitimate signed system binaries loading unsigned or abnormal DLLs from user writable directories (e.g. C:\Users\AppData or C:\Temp).
+version: 1
+status: enabled
+event_type: image_load
+
+level: 13
+severity: high
+confidence: 0.92
+
+logic:
+  all:
+    - field: image.is_signed
+      operator: equals
+      value: false
+
+    - any:
+        - field: image.path
+          operator: contains
+          value: "appdata\\local\\temp"
+        - field: image.path
+          operator: contains
+          value: "c:\\users\\public"
+        - field: image.path
+          operator: contains
+          value: "c:\\temp"
+
+evidence:
+  - process.name
+  - process.pid
+  - image.path
+  - image.is_signed
+
+mitre:
+  tactic: Defense Evasion
+  technique: T1574.002
+  name: "Hijack Execution Flow: DLL Side-Loading"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_SI-4
+
+tags:
+  - attack.defense_evasion
+  - attack.persistence
+  - dll_sideloading
+  - hijack

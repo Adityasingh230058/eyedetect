@@ -1,0 +1,49 @@
+id: DET-EVAS-004
+name: Antivirus or Defender Exclusion Added via PowerShell or Registry
+description: Detects the execution of Add-MpPreference -ExclusionPath or registry modification adding folders/processes to Windows Defender exclusion lists.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 14
+severity: critical
+confidence: 0.95
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - field: process.command_line
+      operator: contains
+      value: Add-MpPreference
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: -ExclusionPath
+        - field: process.command_line
+          operator: contains
+          value: -ExclusionProcess
+        - field: process.command_line
+          operator: contains
+          value: -ExclusionExtension
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Defense Evasion
+  technique: T1562.001
+  name: "Impair Defenses: Disable or Modify Tools - Antivirus Exclusion"
+
+compliance:
+  - PCI-DSS_5.1
+  - NIST_800-53_SI-3
+
+tags:
+  - attack.defense_evasion
+  - defender_exclusion
+  - edr_tampering

@@ -39,6 +39,7 @@ from src.evaluator.threshold import ThresholdEngine
 from src.identity.ueba import IdentityAnalyticsEngine
 from src.ingestion.event_reader import EventReader
 from src.mitre.attack import MitreMatrixNavigator
+from src.rules.taxonomy_coverage import TaxonomyCoverageAuditor
 from src.network.beacon_detector import C2BeaconDetector
 from src.network.port_scanner import PortScanDetector
 from src.remediation.engine import EndpointRemediationEngine
@@ -82,6 +83,11 @@ def main():
         help="Display full MITRE ATT&CK Matrix Coverage Heatmap across loaded rules",
     )
     parser.add_argument(
+        "--audit-taxonomy",
+        action="store_true",
+        help="Run comprehensive Cybersecurity Attack Taxonomy Audit Scorecard across all domains",
+    )
+    parser.add_argument(
         "--export-navigator",
         type=str,
         default=None,
@@ -111,6 +117,12 @@ def main():
     except Exception as e:
         print(f"[ERROR] Failed to load rules: {e}")
         sys.exit(1)
+
+    # Master Attack Taxonomy Audit Scorecard
+    if args.audit_taxonomy:
+        print(TaxonomyCoverageAuditor.render_console_audit(rules))
+        if "--telemetry" not in sys.argv:
+            return
 
     # MITRE ATT&CK Matrix Heatmap Request
     if args.mitre_matrix:

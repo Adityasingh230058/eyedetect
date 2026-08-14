@@ -1,0 +1,51 @@
+id: DET-COLL-002
+name: Keylogger or Clipboard Input Capture Utility Detected
+description: Detects command-line or programmatic invocation of keyloggers (GetAsyncKeyState / SetWindowsHookEx) or clipboard monitors (Get-Clipboard, powershell clipboard scraping).
+version: 1
+status: enabled
+event_type: process_create
+
+level: 13
+severity: high
+confidence: 0.92
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  any:
+    - field: process.command_line
+      operator: contains
+      value: "Get-Clipboard"
+    - field: process.command_line
+      operator: contains
+      value: "SetWindowsHookEx"
+    - field: process.command_line
+      operator: contains
+      value: "GetAsyncKeyState"
+    - field: process.name
+      operator: in
+      value:
+        - keylogger.exe
+        - keyspy.exe
+        - clipspy.exe
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Collection
+  technique: T1056.001
+  name: "Input Capture: Keylogging and Clipboard Collection"
+
+compliance:
+  - PCI-DSS_10.6
+  - NIST_800-53_SI-4
+
+tags:
+  - attack.collection
+  - keylogging
+  - clipboard_theft
+  - input_capture

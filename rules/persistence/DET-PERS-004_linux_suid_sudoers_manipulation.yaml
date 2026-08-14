@@ -1,0 +1,57 @@
+id: DET-PERS-004
+name: Linux SUID Bit Abuse or Sudoers File Privilege Escalation
+description: Detects command-line execution of chmod +s (SUID bit set) or editing of /etc/sudoers to grant passwordless root access.
+version: 1
+status: enabled
+event_type: process_create
+
+level: 14
+severity: critical
+confidence: 0.95
+
+active_response: TERMINATE_PROCESS
+
+logic:
+  all:
+    - any:
+        - field: process.name
+          operator: in
+          value:
+            - chmod
+            - visudo
+            - tee
+        - field: process.command_line
+          operator: contains
+          value: chmod
+
+    - any:
+        - field: process.command_line
+          operator: contains
+          value: "u+s"
+        - field: process.command_line
+          operator: contains
+          value: "4755"
+        - field: process.command_line
+          operator: contains
+          value: "/etc/sudoers"
+
+evidence:
+  - process.name
+  - process.command_line
+  - process.pid
+  - process.user
+
+mitre:
+  tactic: Privilege Escalation
+  technique: T1548.001
+  name: "Abuse Elevation Control Mechanism: Setuid and Setgid"
+
+compliance:
+  - PCI-DSS_10.2.2
+  - NIST_800-53_AC-6
+
+tags:
+  - attack.privilege_escalation
+  - linux
+  - suid
+  - sudoers
