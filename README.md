@@ -6,18 +6,19 @@
 [![MITRE ATT&CK](https://img.shields.io/badge/MITRE%20ATT%26CK-12%2F12%20Tactics%20Covered-orange.svg)](rules/)
 [![Project Status](https://img.shields.io/badge/Status-Active%20Capstone%20Development-yellow.svg)](#-project-status--research-disclaimer)
 
-A cross-domain Endpoint, Identity, Network, and Cloud Threat Detection & Automated Remediation Engine (EDR / XDR) designed in Python.
+A detection and automated response system (EDR / XDR) built from scratch in Python to catch and stop cyber threats across endpoints, user identities, networks, and cloud environments.
 
 ---
 
-## ⚠️ Project Status & Research Disclaimer
+## 📌 Project Status (Capstone WIP)
 
-> **📌 PLEASE NOTE: ACTIVE CAPSTONE RESEARCH & DEVELOPMENT PROTOTYPE**
+> **Hey there!** This is my university capstone project. I am actively building, testing, and refining it, so it is a working prototype under active development.
 > 
-> * This project is an **academic capstone engineering prototype** currently undergoing active, continuous development and evaluation.
-> * While the core detection engine, unit test suite (40/40 tests), and rulebase are validated, **it is not a finalized commercial build**.
-> * Ongoing research updates, experimental detection modules, and performance refactors are pushed frequently. Minor environment-specific quirks or edge-case variations may occur during testing across different operating systems.
-> * Feedback, bug reports, and research discussions are welcomed via GitHub Issues.
+> * All 40 unit tests and the core detection rules are working and tested.
+> * Since I'm actively pushing updates, testing new detection ideas, and refactoring things, you might occasionally run into minor quirks or environment-specific warnings depending on your Python/OS setup.
+> * This is an academic research & learning project, not a commercial enterprise product.
+> 
+> If you find any bugs or have suggestions to make it better, feel free to open an issue!
 
 ---
 
