@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eyedetect - Executive Cyber Threat & Defense Report</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; padding: 30px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 16px; padding: 30px; margin-bottom: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .header h1 { font-size: 28px; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .header p { color: #94a3b8; font-size: 15px; line-height: 1.5; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 30px; }
+        .stat-box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; text-align: center; }
+        .stat-val { font-size: 32px; font-weight: 700; color: #38bdf8; margin-bottom: 4px; }
+        .stat-val.red { color: #f43f5e; }
+        .stat-val.green { color: #10b981; }
+        .stat-label { color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .timeline-title { font-size: 20px; font-weight: 600; color: #e2e8f0; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        
+        .threat-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; margin-bottom: 16px; overflow: hidden; transition: transform 0.15s ease; }
+        .threat-card:hover { border-color: #475569; transform: translateY(-2px); }
+        .threat-header { background: #273549; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+        .step-num { background: #38bdf8; color: #0f172a; font-weight: 700; font-size: 12px; padding: 3px 8px; border-radius: 6px; }
+        .threat-title { font-size: 16px; font-weight: 600; color: #f8fafc; flex: 1; }
+        .badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+        .badge-critical { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid #f43f5e; }
+        .badge-high { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+
+        .threat-body { padding: 20px; }
+        .detail-row { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+        .icon { font-size: 18px; line-height: 1.4; }
+        .detail-text strong { font-size: 14px; color: #cbd5e1; display: block; margin-bottom: 2px; }
+        .detail-text p { font-size: 14px; color: #94a3b8; line-height: 1.5; }
+        
+        .meta-footer { border-top: 1px solid #334155; padding-top: 12px; margin-top: 12px; display: flex; flex-wrap: wrap; gap: 20px; font-size: 13px; color: #64748b; }
+        .meta-footer code { background: #0f172a; padding: 2px 6px; border-radius: 4px; color: #cbd5e1; }
+        .status-clean { color: #10b981; font-weight: 600; }
+        
+        .footer { text-align: center; margin-top: 40px; color: #64748b; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ eyedetect - Executive Incident Story & Defense Report</h1>
+            <p>This report automatically translates complex cyber threat data into a clear, non-technical executive narrative showing how attacks were identified and automatically neutralized.</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-val red">30</div>
+                <div class="stat-label">Attacks Intercepted</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val green">16</div>
+                <div class="stat-label">Auto-Fix Actions Executed</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val red">25</div>
+                <div class="stat-label">Critical Severity Threats</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val green">100%</div>
+                <div class="stat-label">Containment Success Rate</div>
+            </div>
+        </div>
+
+        <div class="timeline-title">
+            <span>📖 Attack Timeline & Automated Defensive Actions:</span>
+        </div>
+
+        
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 01</span>
+                    <span class="threat-title">Phishing Email: Fake Invoice Trick</span>
+                    <span class="badge badge-critical">Level 14/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>An employee clicked on a fake file named 'invoice.pdf.exe' disguised as an invoice PDF, which secretly attempted to launch malware.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Immediately terminated the virus process in milliseconds and moved the file into an isolated AES-256 encrypted vault.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>DET-MALW-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 02</span>
+                    <span class="threat-title">Hidden Encoded Hacker Script</span>
+                    <span class="badge badge-high">Level 11/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>An attacker tried to run a scrambled, heavily obfuscated PowerShell command to evade standard antivirus software.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Analyzed the script's randomness (Shannon Entropy), decoded the hidden commands, and killed the execution.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>DET-PROC-011</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 03</span>
+                    <span class="threat-title">[HOST COMPROMISE THREAT METER] Critical Threat Accumulation on WS-FIN-01</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>Host risk score breached threshold (90/100) across 2 security events.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Neutralized threat via automatic EDR defense playbook.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>CORR-RISK-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 04</span>
+                    <span class="threat-title">Remote Hacker Control (C2 Download)</span>
+                    <span class="badge badge-high">Level 13/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>A malicious script attempted to connect to a remote hacker-controlled server to download second-stage malware.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Deobfuscated the hidden web download cradle and terminated the command shell.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>DET-PROC-012</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 05</span>
+                    <span class="threat-title">Password Dumping from Windows Memory</span>
+                    <span class="badge badge-high">Level 7/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker attempted to read and copy all saved Windows passwords directly from the operating system memory (LSASS).</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Detected memory dumping API hooks and blocked access to system credentials.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>DET-PROC-005</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 06</span>
+                    <span class="threat-title">Windows Password Vault Extraction</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker attempted to export the Windows SAM database containing local user password hashes.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Blocked access to the registry hive and terminated the suspicious registry tool.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>DET-CRED-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 07</span>
+                    <span class="threat-title">Ransomware Precursor: Deleting System Backups</span>
+                    <span class="badge badge-high">Level 7/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker tried to wipe all Volume Shadow Copies so that files could not be restored after encryption.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Flagged destructive backup deletion and raised the host compromise alert level.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>DET-PROC-006</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 08</span>
+                    <span class="threat-title">Anti-Forensics: Erasing Security Audit Logs</span>
+                    <span class="badge badge-high">Level 7/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker used 'wevtutil' to erase Windows Security Event Logs to cover their tracks.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Recorded the anti-forensic evasion attempt and added high risk points to the host threat meter.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>DET-EVAS-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 09</span>
+                    <span class="threat-title">Security Sabotage: Turning Off Windows Defender</span>
+                    <span class="badge badge-high">Level 7/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker executed a command trying to turn off Windows Defender real-time antivirus scanning.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Blocked tampering with security controls and triggered containment measures.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>DET-EVAS-002</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 10</span>
+                    <span class="threat-title">Hidden Backdoor Creation (Scheduled Task)</span>
+                    <span class="badge badge-high">Level 7/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker scheduled an automatic task to secretly start the virus every time the user logs in.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Intercepted the scheduled task creation and flagged persistence.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>DET-PERS-002</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 11</span>
+                    <span class="threat-title">Lateral Movement: Spreading to Other Computers</span>
+                    <span class="badge badge-high">Level 13/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker attempted to jump across the internal network from this computer to another company server (SRV-APP-01).</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Killed the remote management process (wmic.exe) and stopped lateral infection.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>DET-LAT-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 12</span>
+                    <span class="threat-title">🚨 Ransomware Attack Stopped in Progress!</span>
+                    <span class="badge badge-critical">Level 16/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>A ransomware encryptor program began renaming corporate files. It touched our hidden Decoy Canary file.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Tripwire triggered! Instantly killed the encryptor process and isolated the computer from the network to save all other files.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WS-FIN-01</span>
+                        <span><strong>Rule:</strong> <code>DET-RANS-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 13</span>
+                    <span class="threat-title">Active Directory Master Password Theft (DCSync)</span>
+                    <span class="badge badge-critical">Level 16/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>An attacker tried to impersonate a Domain Controller to pull down all company passwords in bulk.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Detected unauthorized replication protocol request and isolated the source host.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> DC-PRIMARY</span>
+                        <span><strong>Rule:</strong> <code>DET-IDENT-005</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 14</span>
+                    <span class="threat-title">[HOST COMPROMISE THREAT METER] Critical Threat Accumulation on DC-PRIMARY</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>Host risk score breached threshold (80/100) across 1 security events.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Neutralized threat via automatic EDR defense playbook.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> DC-PRIMARY</span>
+                        <span><strong>Rule:</strong> <code>CORR-RISK-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 15</span>
+                    <span class="threat-title">Cloud Account Backdoor Created (AWS IAM)</span>
+                    <span class="badge badge-critical">Level 14/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker generated a permanent programmatic AWS API Access Key to maintain permanent access to company cloud.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Automatically deactivated the cloud API access key and revoked active session tokens.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> UNKNOWN_HOST</span>
+                        <span><strong>Rule:</strong> <code>DET-CLOUD-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 16</span>
+                    <span class="threat-title">Cloud Account Backdoor Created (AWS IAM)</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker generated a permanent programmatic AWS API Access Key to maintain permanent access to company cloud.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Automatically deactivated the cloud API access key and revoked active session tokens.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> AWS-PROD-9928</span>
+                        <span><strong>Rule:</strong> <code>DET-CLOUD-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 17</span>
+                    <span class="threat-title">Cloud Data Leak (Public S3 Bucket)</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker altered company cloud storage (S3 bucket) permissions to 'public-read' to leak private records.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Automatically re-applied 'BlockPublicAccess' and restored the bucket to private encrypted status.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> UNKNOWN_HOST</span>
+                        <span><strong>Rule:</strong> <code>DET-CLOUD-002</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 18</span>
+                    <span class="threat-title">[HOST COMPROMISE THREAT METER] Critical Threat Accumulation on AWS-PROD-9928</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>Host risk score breached threshold (100/100) across 2 security events.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Neutralized threat via automatic EDR defense playbook.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> AWS-PROD-9928</span>
+                        <span><strong>Rule:</strong> <code>CORR-RISK-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 19</span>
+                    <span class="threat-title">Cloud Account Backdoor Created (AWS IAM)</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker generated a permanent programmatic AWS API Access Key to maintain permanent access to company cloud.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Automatically deactivated the cloud API access key and revoked active session tokens.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> AWS-PROD-9928</span>
+                        <span><strong>Rule:</strong> <code>DET-CLOUD-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 20</span>
+                    <span class="threat-title">Container Breakout to Host Server (Kubernetes)</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>A compromised Docker container tried to escape its sandbox and gain root access to the physical host server.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Terminated the malicious pod immediately and cordoned the affected node.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> UNKNOWN_HOST</span>
+                        <span><strong>Rule:</strong> <code>DET-CLOUD-003</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 21</span>
+                    <span class="threat-title">Cloud Account Backdoor Created (AWS IAM)</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker generated a permanent programmatic AWS API Access Key to maintain permanent access to company cloud.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Automatically deactivated the cloud API access key and revoked active session tokens.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> K8S-PROD-CLUSTER</span>
+                        <span><strong>Rule:</strong> <code>DET-CLOUD-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 22</span>
+                    <span class="threat-title">Website SQL Injection Attack</span>
+                    <span class="badge badge-critical">Level 14/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>A hacker typed malicious database commands into the company website search bar to steal customer user data.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Identified the SQL UNION attack pattern and blocked the hacker's IP address on the firewall.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WEB-SRV-01</span>
+                        <span><strong>Rule:</strong> <code>DET-WEB-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 23</span>
+                    <span class="threat-title">Web Application Cross-Site Scripting (XSS) or SSTI Injection</span>
+                    <span class="badge badge-high">Level 12/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>Detects HTML/JavaScript injection (<script>, onerror=, javascript:) and Server-Side Template Injection ({{7*7}}, ${T(java.lang)}) in web parameters.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Neutralized threat via automatic EDR defense playbook.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WEB-SRV-01</span>
+                        <span><strong>Rule:</strong> <code>DET-WEB-002</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 24</span>
+                    <span class="threat-title">[HOST COMPROMISE THREAT METER] Critical Threat Accumulation on WEB-SRV-01</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>Host risk score breached threshold (100/100) across 2 security events.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Neutralized threat via automatic EDR defense playbook.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WEB-SRV-01</span>
+                        <span><strong>Rule:</strong> <code>CORR-RISK-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 25</span>
+                    <span class="threat-title">Cloud Server Hijack via SSRF</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker tricked the website into querying the secret cloud internal metadata IP (169.254.169.254) to steal cloud passwords.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Blocked the web request and blacklisted the source IP address.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WEB-SRV-01</span>
+                        <span><strong>Rule:</strong> <code>DET-WEB-003</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 26</span>
+                    <span class="threat-title">Web Server Compromised (Web Shell Backdoor)</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The company web server was exploited to spawn a hacker command prompt (cmd.exe) allowing full remote control.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Terminated the rogue command prompt process and quarantined the affected web worker.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> WEB-SRV-01</span>
+                        <span><strong>Rule:</strong> <code>DET-MALW-005</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 27</span>
+                    <span class="threat-title">Destructive Disk Wiper Attack</span>
+                    <span class="badge badge-critical">Level 16/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>A destructive wiper malware attempted to wipe the physical hard drive sectors (diskpart / clean all) to destroy data.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Intercepted the raw drive destruction call and terminated the wiper process immediately.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> SRV-DB-01</span>
+                        <span><strong>Rule:</strong> <code>DET-MALW-002</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 28</span>
+                    <span class="threat-title">[HOST COMPROMISE THREAT METER] Critical Threat Accumulation on SRV-DB-01</span>
+                    <span class="badge badge-critical">Level 15/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>Host risk score breached threshold (80/100) across 1 security events.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Neutralized threat via automatic EDR defense playbook.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> SRV-DB-01</span>
+                        <span><strong>Rule:</strong> <code>CORR-RISK-001</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 29</span>
+                    <span class="threat-title">Domain Database Theft (NTDS.dit)</span>
+                    <span class="badge badge-critical">Level 16/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker attempted to create a backup copy of the company's master Active Directory database file.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Killed the ntdsutil database extraction process and alerted administrators.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> SRV-DB-01</span>
+                        <span><strong>Rule:</strong> <code>DET-CRED-002</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="threat-card">
+                <div class="threat-header">
+                    <span class="step-num">Step 30</span>
+                    <span class="threat-title">Cloud Data Exfiltration (Mass Data Stealing)</span>
+                    <span class="badge badge-critical">Level 14/16</span>
+                </div>
+                <div class="threat-body">
+                    <div class="detail-row">
+                        <span class="icon red">🔴</span>
+                        <div class="detail-text">
+                            <strong>What the Hacker Attempted:</strong>
+                            <p>The attacker ran AWS CLI to upload stolen backup files to an external hacker-owned S3 storage bucket.</p>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <span class="icon green">🟢</span>
+                        <div class="detail-text">
+                            <strong>How the System Automatically Fixed It:</strong>
+                            <p>Killed the aws.exe upload process and blocked the outgoing transfer.</p>
+                        </div>
+                    </div>
+                    <div class="meta-footer">
+                        <span><strong>Targeted Asset:</strong> SRV-DB-01</span>
+                        <span><strong>Rule:</strong> <code>DET-EXFIL-002</code></span>
+                        <span><strong>Status:</strong> <span class="status-clean">✓ Neutralized & Secure</span></span>
+                    </div>
+                </div>
+            </div>
+            
+
+        <div class="footer">
+            <p>Generated by <strong>eyedetect Enterprise Threat Engine</strong> | All Systems Protected & Cleaned.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -40,6 +40,8 @@ from src.identity.ueba import IdentityAnalyticsEngine
 from src.ingestion.event_reader import EventReader
 from src.mitre.attack import MitreMatrixNavigator
 from src.rules.taxonomy_coverage import TaxonomyCoverageAuditor
+from src.alerting.story_formatter import StoryModeFormatter
+from src.alerting.html_report import HtmlReportGenerator
 from src.network.beacon_detector import C2BeaconDetector
 from src.network.port_scanner import PortScanDetector
 from src.remediation.engine import EndpointRemediationEngine
@@ -76,6 +78,17 @@ def main():
         type=str,
         default=None,
         help="Optional path to save generated alerts (NDJSON format)",
+    )
+    parser.add_argument(
+        "--story",
+        action="store_true",
+        help="Display clean, non-technical plain-English storyline of attacks and automated defenses",
+    )
+    parser.add_argument(
+        "--html-report",
+        type=str,
+        default=None,
+        help="Generate a beautiful interactive HTML dashboard report (e.g. samples/threat_report.html)",
     )
     parser.add_argument(
         "--mitre-matrix",
@@ -215,7 +228,7 @@ def main():
             if alert.active_response:
                 active_responses_count += 1
 
-            _print_alert(alert, args.output_format)
+            _print_alert(alert, args.output_format, story_mode=args.story)
 
             # Record in Enterprise Attack Graph
             dest_host = event.get("network", {}).get("destination_ip") or event.get("target_host")
@@ -250,13 +263,13 @@ def main():
                         tags=["attack.enterprise_campaign", "multi_hop_pivot", "cross_domain"],
                     )
                     all_generated_alerts.append(ent_alert)
-                    _print_alert(ent_alert, args.output_format)
+                    _print_alert(ent_alert, args.output_format, story_mode=args.story)
 
                     if args.auto_remediate:
                         rem_report = remediation_engine.remediate_enterprise_campaign(campaign)
                         if rem_report.actions_executed:
                             remediations_executed += len(rem_report.actions_executed)
-                            _print_remediation(rem_report)
+                            _print_remediation(rem_report, story_mode=args.story)
 
             # Automated Threat Remediation (Level >= 11 or explicit critical)
             if args.auto_remediate and res.rule.level >= 11:
@@ -268,7 +281,7 @@ def main():
                 )
                 if rem_report.actions_executed:
                     remediations_executed += len(rem_report.actions_executed)
-                    _print_remediation(rem_report)
+                    _print_remediation(rem_report, story_mode=args.story)
 
             # Update Host Threat Meter
             risk_incident = risk_scorer.record_detection(
@@ -282,7 +295,7 @@ def main():
             if risk_incident:
                 risk_breach_alerts_count += 1
                 all_generated_alerts.append(risk_incident)
-                _print_alert(risk_incident, args.output_format)
+                _print_alert(risk_incident, args.output_format, story_mode=args.story)
 
             # Ingest into Multi-Event Correlation Engine
             incidents = correlation_engine.ingest_detection(res)
@@ -290,7 +303,7 @@ def main():
                 incident_alerts_count += 1
                 inc_alert = inc.to_alert()
                 all_generated_alerts.append(inc_alert)
-                _print_alert(inc_alert, args.output_format)
+                _print_alert(inc_alert, args.output_format, story_mode=args.story)
 
         # B. Evaluate Cloud & Workload Threat Engine
         cloud_matches = cloud_engine.inspect_cloud_event(event)
@@ -314,13 +327,13 @@ def main():
                 tags=["attack.cloud", f"cloud.{cm.cloud_provider.lower()}", "workload_security"],
             )
             all_generated_alerts.append(c_alert)
-            _print_alert(c_alert, args.output_format)
+            _print_alert(c_alert, args.output_format, story_mode=args.story)
 
             if args.auto_remediate:
                 rem_report = remediation_engine.remediate_cloud_threat(cm)
                 if rem_report.actions_executed:
                     remediations_executed += len(rem_report.actions_executed)
-                    _print_remediation(rem_report)
+                    _print_remediation(rem_report, story_mode=args.story)
 
         # C. Evaluate ITDR & Identity Analytics Engine (UEBA)
         id_matches = identity_engine.ingest_identity_event(event)
@@ -344,13 +357,13 @@ def main():
                 tags=["attack.credential_access", "attack.initial_access", "identity_threat", "ueba"],
             )
             all_generated_alerts.append(id_alert)
-            _print_alert(id_alert, args.output_format)
+            _print_alert(id_alert, args.output_format, story_mode=args.story)
 
             if args.auto_remediate:
                 rem_report = remediation_engine.remediate_identity_threat(idm)
                 if rem_report.actions_executed:
                     remediations_executed += len(rem_report.actions_executed)
-                    _print_remediation(rem_report)
+                    _print_remediation(rem_report, story_mode=args.story)
 
         # D. Evaluate Ransomware Shield & Canary Tripwires
         canary_match = ransomware_shield.inspect_file_event(event)
@@ -374,7 +387,7 @@ def main():
                 tags=["attack.impact", "ransomware_shield", "canary_tripwire"],
             )
             all_generated_alerts.append(canary_alert)
-            _print_alert(canary_alert, args.output_format)
+            _print_alert(canary_alert, args.output_format, story_mode=args.story)
 
             if args.auto_remediate:
                 rem_report = remediation_engine.remediate_threat(
@@ -385,7 +398,7 @@ def main():
                 )
                 if rem_report.actions_executed:
                     remediations_executed += len(rem_report.actions_executed)
-                    _print_remediation(rem_report)
+                    _print_remediation(rem_report, story_mode=args.story)
 
         # E. Evaluate C2 Beaconing Periodic Engine
         beacon_match = beacon_detector.ingest_connection(event)
@@ -418,7 +431,7 @@ def main():
                 tags=["attack.command_and_control", "c2_beaconing", "heartbeat_analysis"],
             )
             all_generated_alerts.append(beacon_alert)
-            _print_alert(beacon_alert, args.output_format)
+            _print_alert(beacon_alert, args.output_format, story_mode=args.story)
 
         # F. Evaluate Lateral Port Scanner & Subnet Sweeper
         scan_matches = port_scan_detector.ingest_connection(event)
@@ -442,7 +455,7 @@ def main():
                 tags=["attack.discovery", "lateral_reconnaissance", "port_scan"],
             )
             all_generated_alerts.append(scan_alert)
-            _print_alert(scan_alert, args.output_format)
+            _print_alert(scan_alert, args.output_format, story_mode=args.story)
 
         # G. Evaluate Frequency & Threshold Rules
         thresh_matches = threshold_engine.ingest_event(event)
@@ -475,8 +488,7 @@ def main():
                 tags=["attack.impact", "ransomware", "threshold_trigger"],
             )
             all_generated_alerts.append(thresh_alert)
-            _print_alert(thresh_alert, args.output_format)
-
+            _print_alert(thresh_alert, args.output_format, story_mode=args.story)
     # Save to output file if specified
     if args.output_file:
         out_path = Path(args.output_file)
@@ -485,6 +497,21 @@ def main():
             for alt in all_generated_alerts:
                 f.write(AlertFormatter.to_ndjson(alt) + "\n")
         print(f"\n[+] Saved {len(all_generated_alerts)} alert log(s) to: {out_path.resolve()}")
+
+    # Generate Plain-English Executive Story Mode
+    if args.story:
+        print("\n" + StoryModeFormatter.render_story_timeline(all_generated_alerts, remediation_engine.action_history))
+
+    # Generate Standalone Interactive HTML Report
+    if args.html_report:
+        report_file = HtmlReportGenerator.generate_html_report(
+            alerts=all_generated_alerts,
+            remediations=remediation_engine.action_history,
+            telemetry_file=str(telemetry_path),
+            output_path=args.html_report,
+        )
+        print(f"\n✨ [EXECUTIVE DASHBOARD READY] Open this in your web browser to view the clean visual story:")
+        print(f"   👉 {report_file}")
 
     print("\n" + "=" * 70)
     print("[+] Elite Evaluation & Incident Summary:")
@@ -503,7 +530,9 @@ def main():
     print("=" * 70)
 
 
-def _print_alert(alert: Alert, fmt: str):
+def _print_alert(alert: Alert, fmt: str, story_mode: bool = False):
+    if story_mode:
+        return
     if fmt == "console":
         print(AlertFormatter.to_console(alert))
     elif fmt == "json":
@@ -512,7 +541,9 @@ def _print_alert(alert: Alert, fmt: str):
         print(AlertFormatter.to_ndjson(alert))
 
 
-def _print_remediation(report):
+def _print_remediation(report, story_mode: bool = False):
+    if story_mode:
+        return
     print("  \033[92m⚡ [THREAT REMEDIATED / SYSTEM RESTORED]\033[0m")
     for act in report.actions_executed:
         print(f"      -> Action : {act.action_type:<28} | Target: {act.target_entity} | Status: {act.status}")
