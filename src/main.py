@@ -38,6 +38,8 @@ from src.evaluator.engine import RuleEvaluator
 from src.evaluator.threshold import ThresholdEngine
 from src.identity.ueba import IdentityAnalyticsEngine
 from src.ingestion.event_reader import EventReader
+from src.ingestion.live_stream import LiveTelemetryStream
+from src.ingestion.officer_adapter import OfficerIngestionAdapter
 from src.mitre.attack import MitreMatrixNavigator
 from src.rules.taxonomy_coverage import TaxonomyCoverageAuditor
 from src.alerting.story_formatter import StoryModeFormatter
@@ -65,6 +67,23 @@ def main():
         type=str,
         default="samples/attack_simulation.ndjson",
         help="Path to telemetry NDJSON file",
+    )
+    parser.add_argument(
+        "--officer",
+        action="store_true",
+        help="Launch and ingest live telemetry stream from C++ Officer Agent subprocess",
+    )
+    parser.add_argument(
+        "--officer-bin",
+        type=str,
+        default="officer-agent.exe",
+        help="Path to C++ officer-agent.exe binary",
+    )
+    parser.add_argument(
+        "--officer-ndjson",
+        type=str,
+        default=None,
+        help="Ingest Panopticon Schema 0.2 NDJSON telemetry collected from C++ Officer Agent",
     )
     parser.add_argument(
         "--output-format",
@@ -160,18 +179,32 @@ def main():
     enterprise_graph = EnterpriseAttackGraph()
     remediation_engine = EndpointRemediationEngine(dry_run=False)
 
-    # 3. Ingest and Evaluate Telemetry
-    telemetry_path = Path(args.telemetry)
-    if not telemetry_path.exists():
-        print(f"[ERROR] Telemetry file not found: {telemetry_path}")
-        sys.exit(1)
+    # 3. Setup Telemetry Stream
+    if args.officer:
+        print(f"[*] 🚀 Spawning C++ Officer Agent subprocess: '{args.officer_bin}'")
+        event_stream = LiveTelemetryStream.stream_from_officer_process(args.officer_bin)
+        stream_name = f"Live C++ Officer Agent ({args.officer_bin})"
+    elif args.officer_ndjson:
+        officer_path = Path(args.officer_ndjson)
+        if not officer_path.exists():
+            print(f"[ERROR] Officer telemetry file not found: {officer_path}")
+            sys.exit(1)
+        event_stream = LiveTelemetryStream.stream_from_file(officer_path)
+        stream_name = f"Officer Panopticon Telemetry ({officer_path.name})"
+    else:
+        telemetry_path = Path(args.telemetry)
+        if not telemetry_path.exists():
+            print(f"[ERROR] Telemetry file not found: {telemetry_path}")
+            sys.exit(1)
+        event_stream = LiveTelemetryStream.stream_from_file(telemetry_path)
+        stream_name = f"Telemetry Stream ({telemetry_path.name})"
 
     print("=" * 80)
     print("👁️  eyedetect - Enterprise Cyber Threat Detection & Automated Defense Engine")
     print("=" * 80)
     print(f"[*] 🛡️  Protection Active: {len(rules)} Detection Rules Armed across 14 Threat Domains")
     print("[*] ⚡ Automated Playbooks: Process Termination, File Quarantine, Account Lockout")
-    print(f"[*] 📡 Processing Security Telemetry Stream: '{telemetry_path.name}'\n")
+    print(f"[*] 📡 Processing Security Telemetry: {stream_name}\n")
 
     events_count = 0
     atomic_alerts_count = 0
@@ -188,7 +221,7 @@ def main():
     remediations_executed = 0
     all_generated_alerts = []
 
-    for event in EventReader.read_ndjson(telemetry_path):
+    for event in event_stream:
         events_count += 1
         host_id = event.get("host_id") or event.get("cloud", {}).get("account_id") or "UNKNOWN_HOST"
         ts = event.get("timestamp", "")
