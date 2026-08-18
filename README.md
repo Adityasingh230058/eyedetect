@@ -49,8 +49,13 @@ A detection and automated response system (EDR / XDR) built from scratch in Pyth
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Ingesting Live Telemetry from the C++ Agent:
+### ⚡ Live Interactive Pipeline Demo:
+Run the live terminal visualizer to see real-time C++ kernel telemetry streaming into the detection engine and auto-remediation playbooks:
+```bash
+python scripts/demo_edr_pipeline.py
+```
 
+### Ingesting Live Telemetry from the C++ Agent:
 ```bash
 # Ingest live C++ Officer agent telemetry stream
 python src/main.py --rules rules --officer-ndjson samples/officer_live_sample.ndjson
@@ -58,6 +63,8 @@ python src/main.py --rules rules --officer-ndjson samples/officer_live_sample.nd
 # Or attach directly to the compiled officer-agent.exe binary
 python src/main.py --rules rules --officer --officer-bin path/to/officer-agent.exe
 ```
+
+> 📖 **Full Integration Specs**: See [**`docs/OFFICER_INTEGRATION.md`**](docs/OFFICER_INTEGRATION.md) for the complete data contract, field mappings, and developer architecture.
 
 ---
 
