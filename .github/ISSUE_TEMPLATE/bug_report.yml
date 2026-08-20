@@ -1,0 +1,28 @@
+name: Bug Report
+description: Report a false positive or engine issue in eyedetect
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve eyedetect!
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: What unexpected behavior or rule parsing error occurred?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: CLI command or sample NDJSON event string.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment Info
+      placeholder: OS (Linux/Windows/macOS), Python version, Panopticon Schema version
+    validations:
+      required: false

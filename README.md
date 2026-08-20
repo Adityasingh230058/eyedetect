@@ -1,10 +1,11 @@
 # 👁️ eyedetect — Enterprise Cyber Threat Detection & Automated Response Engine
 
+[![CI](https://github.com/Adityasingh230058/eyedetect/actions/workflows/ci.yml/badge.svg)](https://github.com/Adityasingh230058/eyedetect/actions/workflows/ci.yml)
+[![Python: 3.9+](https://img.shields.io/badge/Python-3.9%20|%203.10%20|%203.11%20|%203.12-brightgreen.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Python: 3.9+](https://img.shields.io/badge/Python-3.9%2B-brightgreen.svg)](https://www.python.org/)
 [![Tests: 43 Passed](https://img.shields.io/badge/Tests-43%20Passed%20(100%25)-success.svg)](tests/)
 [![MITRE ATT&CK](https://img.shields.io/badge/MITRE%20ATT%26CK-12%2F12%20Tactics%20Covered-orange.svg)](rules/)
-[![Project Status](https://img.shields.io/badge/Status-Active%20Capstone%20Development-yellow.svg)](#-project-status--research-disclaimer)
+[![Project Status](https://img.shields.io/badge/Status-Active%20Development-yellow.svg)](#-project-status--research-disclaimer)
 
 A detection and automated response system (EDR / XDR) built from scratch in Python to catch and stop cyber threats across endpoints, user identities, networks, and cloud environments.
 
@@ -189,4 +190,5 @@ eyedetect/
 ---
 
 ## 📜 License
-MIT License. Developed as a University Capstone Project in Cyber Threat Detection & Automated Remediation.
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
